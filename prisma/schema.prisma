@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Turma {
+  id        String   @id @default(cuid())
+  nome      String
+  curso     String
+  turno     String
+  horario   String
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  alunos    Aluno[]
+  chamadas  Chamada[]
+  materiais Material[]
+}
+
+model Aluno {
+  id                String    @id @default(cuid())
+  nome              String
+  cpf               String    @unique
+  email             String?
+  telefone          String?
+  foto              String?
+  dataNascimento    DateTime?
+  dataMatricula     DateTime
+  situacaoMatricula String    @default("ATIVO")
+  observacoes       String?
+  senha             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  turmaId   String
+  turma     Turma     @relation(fields: [turmaId], references: [id])
+
+  pagamentos Parcela[]
+  presencas  Presenca[]
+}
+
+model Parcela {
+  id            String    @id @default(cuid())
+  numero        Int
+  valor         Float
+  vencimento    DateTime
+  pago          Boolean   @default(false)
+  dataPagamento DateTime?
+  createdAt     DateTime  @default(now())
+
+  alunoId String
+  aluno   Aluno  @relation(fields: [alunoId], references: [id])
+}
+
+model Chamada {
+  id        String   @id @default(cuid())
+  data      DateTime
+  createdAt DateTime @default(now())
+
+  turmaId   String
+  turma     Turma      @relation(fields: [turmaId], references: [id])
+
+  presencas Presenca[]
+}
+
+model Presenca {
+  id       String  @id @default(cuid())
+  presente Boolean
+
+  chamadaId String
+  chamada   Chamada @relation(fields: [chamadaId], references: [id])
+
+  alunoId String
+  aluno   Aluno   @relation(fields: [alunoId], references: [id])
+
+  @@unique([chamadaId, alunoId])
+}
+
+model Material {
+  id        String   @id @default(cuid())
+  titulo    String
+  arquivo   String
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  turmaId String
+  turma   Turma  @relation(fields: [turmaId], references: [id])
+}
+
+model ConfiguracaoSheet {
+  id        String   @id @default(cuid())
+  turmaId   String
+  sheetId   String
+  nomeAba   String
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

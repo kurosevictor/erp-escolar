@@ -1,65 +1,158 @@
-import Image from "next/image";
+'use client'
+import { useEffect, useState } from 'react'
+import { Users, AlertCircle, CheckCircle, BookOpen } from 'lucide-react'
+import {
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
+} from 'recharts'
+import Link from 'next/link'
+import { formatCurrency, getSituacaoColor, getSituacaoLabel } from '@/lib/utils'
 
-export default function Home() {
+interface DashboardData {
+  totalAlunos: number
+  inadimplentes: number
+  alunosAtivos: number
+  totalCursos: number
+  porCurso: { curso: string; total: number }[]
+  porPagamento: { situacao: string; total: number }[]
+  recentes: {
+    id: string
+    nome: string
+    curso: string
+    turno: string
+    foto: string | null
+    situacaoPagamento: string
+  }[]
+}
+
+const COLORS = ['#1e3a5f', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe']
+const PAG_COLORS: Record<string, string> = {
+  EM_DIA: '#22c55e',
+  INADIMPLENTE: '#ef4444',
+  ISENTO: '#3b82f6',
+}
+
+export default function Dashboard() {
+  const [data, setData] = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/dashboard')
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      </div>
+    )
+  }
+
+  if (!data) return <p className="text-red-500">Erro ao carregar dados</p>
+
+  const cards = [
+    { label: 'Total de Alunos', value: data.totalAlunos, icon: Users, color: 'bg-blue-600' },
+    { label: 'Inadimplentes', value: data.inadimplentes, icon: AlertCircle, color: 'bg-red-500' },
+    { label: 'Alunos Ativos', value: data.alunosAtivos, icon: CheckCircle, color: 'bg-green-500' },
+    { label: 'Total de Cursos', value: data.totalCursos, icon: BookOpen, color: 'bg-purple-500' },
+  ]
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-500 mt-1">Visão geral do sistema</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {cards.map((card) => {
+          const Icon = card.icon
+          return (
+            <div key={card.label} className="bg-white rounded-xl shadow-sm p-6 flex items-center gap-4 hover:shadow-md transition-shadow">
+              <div className={`${card.color} p-3 rounded-lg`}>
+                <Icon className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{card.label}</p>
+                <p className="text-2xl font-bold text-gray-900">{card.value}</p>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Distribuição por Curso</h2>
+          <ResponsiveContainer width="100%" height={280}>
+            <PieChart>
+              <Pie
+                data={data.porCurso}
+                dataKey="total"
+                nameKey="curso"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label={({ name, percent }: { name?: string; percent?: number }) => `${name ?? ''} (${((percent ?? 0) * 100).toFixed(0)}%)`}
+              >
+                {data.porCurso.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Situação de Pagamento</h2>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={data.porPagamento}>
+              <XAxis dataKey="situacao" tickFormatter={(v: string) => getSituacaoLabel(v)} />
+              <YAxis />
+              <Tooltip labelFormatter={(label) => getSituacaoLabel(String(label))} />
+              <Bar dataKey="total" name="Alunos" radius={[4, 4, 0, 0]}>
+                {data.porPagamento.map((entry, i) => (
+                  <Cell key={i} fill={PAG_COLORS[entry.situacao] || '#94a3b8'} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
-      </main>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Alunos Recentes</h2>
+        <div className="space-y-3">
+          {data.recentes.map((aluno) => (
+            <Link
+              key={aluno.id}
+              href={`/alunos/${aluno.id}`}
+              className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                {aluno.foto ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={aluno.foto} alt={aluno.nome} className="w-10 h-10 rounded-full object-cover" />
+                ) : (
+                  <span className="text-blue-600 font-semibold text-sm">
+                    {aluno.nome.charAt(0)}
+                  </span>
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-gray-900">{aluno.nome}</p>
+                <p className="text-sm text-gray-500">{aluno.curso} • {getSituacaoLabel(aluno.turno)}</p>
+              </div>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getSituacaoColor(aluno.situacaoPagamento)}`}>
+                {getSituacaoLabel(aluno.situacaoPagamento)}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
-  );
+  )
 }
