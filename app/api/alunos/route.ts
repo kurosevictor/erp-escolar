@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   const turno = searchParams.get('turno') || ''
   const matricula = searchParams.get('matricula') || ''
   const inadimplente = searchParams.get('inadimplente') || ''
+  const sort = searchParams.get('sort') || 'nome'
 
   const where: Record<string, unknown> = {}
 
@@ -32,7 +33,11 @@ export async function GET(request: NextRequest) {
         where,
         skip: (page - 1) * limit,
         take: limit,
-        orderBy: { nome: 'asc' },
+        orderBy: sort === 'diaVencimento'
+          ? [{ diaVencimento: { sort: 'asc', nulls: 'last' } }]
+          : sort === 'valor'
+          ? [{ valorMensalidade: { sort: 'desc', nulls: 'last' } }]
+          : { nome: 'asc' },
         include: { turma: true, pagamentos: true },
       }),
       prisma.aluno.count({ where }),

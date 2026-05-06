@@ -23,6 +23,8 @@ interface Aluno {
   cpf: string
   foto: string | null
   situacaoMatricula: string
+  diaVencimento: number | null
+  valorMensalidade: number | null
   turma: Turma
   pagamentos: Parcela[]
 }
@@ -38,6 +40,7 @@ export default function AlunosPage() {
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState({ curso: '', turno: '', matricula: '' })
+  const [sort, setSort] = useState('nome')
 
   // cursos e turnos únicos das turmas
   const cursos = [...new Set(turmas.map(t => t.curso))].sort()
@@ -49,7 +52,7 @@ export default function AlunosPage() {
 
   const fetchAlunos = useCallback(async () => {
     setLoading(true)
-    const params = new URLSearchParams({ page: String(page), limit: '20', search })
+    const params = new URLSearchParams({ page: String(page), limit: '20', search, sort })
     if (filters.curso) params.set('curso', filters.curso)
     if (filters.turno) params.set('turno', filters.turno)
     if (filters.matricula) params.set('matricula', filters.matricula)
@@ -58,7 +61,7 @@ export default function AlunosPage() {
     setAlunos(data.alunos || [])
     setTotal(data.total || 0)
     setLoading(false)
-  }, [page, search, filters])
+  }, [page, search, filters, sort])
 
   useEffect(() => { fetchAlunos() }, [fetchAlunos])
 
@@ -123,6 +126,15 @@ export default function AlunosPage() {
             <option value="">Todas Matrículas</option>
             {MATRICULAS.map(m => <option key={m} value={m}>{getSituacaoLabel(m)}</option>)}
           </select>
+          <select
+            value={sort}
+            onChange={e => { setSort(e.target.value); setPage(1) }}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="nome">Ordenar: Nome</option>
+            <option value="diaVencimento">Ordenar: Dia Vencimento</option>
+            <option value="valor">Ordenar: Valor (maior)</option>
+          </select>
           <div className="flex border border-gray-300 rounded-lg overflow-hidden">
             <button onClick={() => setViewMode('cards')}
               className={`p-2 ${viewMode === 'cards' ? 'bg-[#1e3a5f] text-white' : 'bg-white text-gray-600'}`}>
@@ -162,6 +174,14 @@ export default function AlunosPage() {
                     <h3 className="font-semibold text-gray-900 truncate">{aluno.nome}</h3>
                     <p className="text-sm text-gray-500">{aluno.turma.curso}</p>
                     <p className="text-xs text-gray-400">{aluno.turma.turno} · {aluno.turma.nome}</p>
+                    <div className="flex gap-3 mt-1">
+                      {aluno.diaVencimento && (
+                        <span className="text-xs text-blue-600 font-medium">Vence dia {aluno.diaVencimento}</span>
+                      )}
+                      {aluno.valorMensalidade != null && aluno.valorMensalidade > 0 && (
+                        <span className="text-xs text-gray-500">R$ {aluno.valorMensalidade.toFixed(2).replace('.', ',')}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 {tot > 0 && (
@@ -202,6 +222,8 @@ export default function AlunosPage() {
                 <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">Turma</th>
                 <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">Turno</th>
                 <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">Matrícula</th>
+                <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">Vencimento</th>
+                <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">Mensalidade</th>
                 <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">Financeiro</th>
               </tr>
             </thead>
@@ -229,6 +251,12 @@ export default function AlunosPage() {
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getSituacaoColor(aluno.situacaoMatricula)}`}>
                         {getSituacaoLabel(aluno.situacaoMatricula)}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-blue-600 font-medium">
+                      {aluno.diaVencimento ? `Dia ${aluno.diaVencimento}` : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {aluno.valorMensalidade ? `R$ ${aluno.valorMensalidade.toFixed(2).replace('.', ',')}` : '—'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {tot > 0 ? (

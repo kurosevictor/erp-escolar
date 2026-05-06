@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { DollarSign, TrendingDown } from 'lucide-react'
+import { DollarSign, TrendingDown, CheckCircle, Clock } from 'lucide-react'
 import { formatCPF, formatCurrency } from '@/lib/utils'
 
 interface Parcela {
@@ -45,6 +45,12 @@ export default function FinanceiroPage() {
     return sum + vencidas.reduce((s, p) => s + p.valor, 0)
   }, 0)
 
+  const totalPago = alunos.reduce((sum, a) =>
+    sum + a.pagamentos.filter(p => p.pago).reduce((s, p) => s + p.valor, 0), 0)
+
+  const totalAReceber = alunos.reduce((sum, a) =>
+    sum + a.pagamentos.filter(p => !p.pago).reduce((s, p) => s + p.valor, 0), 0)
+
   return (
     <div className="space-y-6">
       <div>
@@ -52,22 +58,40 @@ export default function FinanceiroPage() {
         <p className="text-gray-500 mt-1">Gestão de pagamentos e inadimplência</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl shadow-sm p-6 flex items-center gap-4">
+          <div className="bg-green-500 p-3 rounded-lg">
+            <CheckCircle className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Pago</p>
+            <p className="text-2xl font-bold text-green-600">{formatCurrency(totalPago)}</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-6 flex items-center gap-4">
+          <div className="bg-orange-500 p-3 rounded-lg">
+            <Clock className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">A Receber</p>
+            <p className="text-2xl font-bold text-orange-600">{formatCurrency(totalAReceber)}</p>
+          </div>
+        </div>
         <div className="bg-white rounded-xl shadow-sm p-6 flex items-center gap-4">
           <div className="bg-red-500 p-3 rounded-lg">
             <TrendingDown className="w-6 h-6 text-white" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Total em Aberto (vencido)</p>
+            <p className="text-sm text-gray-500">Vencido em Aberto</p>
             <p className="text-2xl font-bold text-red-600">{formatCurrency(totalInadimplencia)}</p>
           </div>
         </div>
         <div className="bg-white rounded-xl shadow-sm p-6 flex items-center gap-4">
-          <div className="bg-orange-500 p-3 rounded-lg">
+          <div className="bg-blue-600 p-3 rounded-lg">
             <DollarSign className="w-6 h-6 text-white" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Alunos com Parcelas Vencidas</p>
+            <p className="text-sm text-gray-500">Alunos Inadimplentes</p>
             <p className="text-2xl font-bold text-gray-900">{alunosComInadimplencia.length}</p>
           </div>
         </div>
