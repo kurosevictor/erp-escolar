@@ -26,18 +26,22 @@ export async function GET(request: NextRequest) {
     where.pagamentos = { some: { pago: false, vencimento: { lt: new Date() } } }
   }
 
-  const [alunos, total] = await Promise.all([
-    prisma.aluno.findMany({
-      where,
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { nome: 'asc' },
-      include: { turma: true, pagamentos: true },
-    }),
-    prisma.aluno.count({ where }),
-  ])
-
-  return NextResponse.json({ alunos, total, page, limit })
+  try {
+    const [alunos, total] = await Promise.all([
+      prisma.aluno.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { nome: 'asc' },
+        include: { turma: true, pagamentos: true },
+      }),
+      prisma.aluno.count({ where }),
+    ])
+    return NextResponse.json({ alunos, total, page, limit })
+  } catch (e: any) {
+    console.error('[GET /api/alunos]', e)
+    return NextResponse.json({ error: e.message, alunos: [], total: 0, page, limit }, { status: 500 })
+  }
 }
 
 export async function POST(request: NextRequest) {

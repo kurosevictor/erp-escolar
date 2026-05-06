@@ -54,6 +54,8 @@ model Parcela {
 
   alunoId String
   aluno   Aluno  @relation(fields: [alunoId], references: [id])
+
+  @@map("Mensalidade")
 }
 
 model Chamada {

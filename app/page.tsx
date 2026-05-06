@@ -38,7 +38,16 @@ export default function Dashboard() {
   useEffect(() => {
     fetch('/api/dashboard')
       .then(r => r.json())
-      .then(d => { setData(d); setLoading(false) })
+      .then(d => {
+        if (d.error) { console.error('Dashboard API error:', d.error); setLoading(false); return }
+        setData({
+          ...d,
+          porCurso: d.porCurso ?? [],
+          porPagamento: d.porPagamento ?? [],
+          recentes: d.recentes ?? [],
+        })
+        setLoading(false)
+      })
       .catch(() => setLoading(false))
   }, [])
 

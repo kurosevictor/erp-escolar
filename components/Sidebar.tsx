@@ -1,12 +1,13 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, DollarSign, Settings, GraduationCap } from 'lucide-react'
+import { LayoutDashboard, Users, DollarSign, Settings, GraduationCap, CalendarCheck } from 'lucide-react'
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/alunos', label: 'Alunos', icon: Users },
   { href: '/financeiro', label: 'Financeiro', icon: DollarSign },
+  { href: '/financeiro/mensalidades', label: 'Mensalidades', icon: CalendarCheck },
   { href: '/configuracoes/sheets', label: 'Configurações', icon: Settings },
 ]
 
