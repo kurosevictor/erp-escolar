@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { audit } from '@/lib/audit'
+import { createAlunoSchema } from '@/lib/schemas/aluno.schema'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -33,39 +35,57 @@ export async function GET(request: NextRequest) {
         where,
         skip: (page - 1) * limit,
         take: limit,
-        orderBy: sort === 'diaVencimento'
-          ? [{ diaVencimento: { sort: 'asc', nulls: 'last' } }]
-          : sort === 'valor'
-          ? [{ valorMensalidade: { sort: 'desc', nulls: 'last' } }]
-          : { nome: 'asc' },
+        orderBy:
+          sort === 'diaVencimento'
+            ? [{ diaVencimento: { sort: 'asc', nulls: 'last' } }]
+            : sort === 'valor'
+            ? [{ valorMensalidade: { sort: 'desc', nulls: 'last' } }]
+            : { nome: 'asc' },
         include: { turma: true, pagamentos: true },
       }),
       prisma.aluno.count({ where }),
     ])
     return NextResponse.json({ alunos, total, page, limit })
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Erro interno'
     console.error('[GET /api/alunos]', e)
-    return NextResponse.json({ error: e.message, alunos: [], total: 0, page, limit }, { status: 500 })
+    return NextResponse.json({ error: msg, alunos: [], total: 0, page, limit }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
-  const data = await request.json()
+  const body: unknown = await request.json()
+
+  const parsed = createAlunoSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 })
+  }
+
+  const data = parsed.data
 
   const aluno = await prisma.aluno.create({
     data: {
       nome: data.nome,
-      cpf: data.cpf.replace(/\D/g, ''),
-      email: data.email || null,
-      telefone: data.telefone ? data.telefone.replace(/\D/g, '') : null,
-      foto: data.foto || null,
-      dataNascimento: data.dataNascimento ? new Date(data.dataNascimento) : null,
-      dataMatricula: new Date(data.dataMatricula),
-      situacaoMatricula: data.situacaoMatricula || 'ATIVO',
-      observacoes: data.observacoes || null,
+      cpf: data.cpf ?? '',
+      email: data.email ?? null,
+      telefone: data.telefone ?? null,
+      foto: data.foto ?? null,
+      dataNascimento: data.dataNascimento ?? null,
+      dataMatricula: data.dataMatricula ?? new Date(),
+      situacaoMatricula: data.situacaoMatricula ?? 'ATIVO',
+      observacoes: data.observacoes ?? null,
       turmaId: data.turmaId,
+      diaVencimento: data.diaVencimento ?? null,
+      valorMensalidade: data.valorMensalidade ?? null,
     },
     include: { turma: true, pagamentos: true },
+  })
+
+  await audit({
+    action: 'CREATE',
+    entity: 'Aluno',
+    entityId: aluno.id,
+    after: { nome: aluno.nome, cpf: aluno.cpf, turmaId: aluno.turmaId },
   })
 
   return NextResponse.json(aluno, { status: 201 })

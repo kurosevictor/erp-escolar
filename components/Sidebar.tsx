@@ -1,7 +1,20 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, DollarSign, Settings, GraduationCap, CalendarCheck, FileText, Package, Cake } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Users,
+  DollarSign,
+  Settings,
+  GraduationCap,
+  CalendarCheck,
+  FileText,
+  Package,
+  Cake,
+  UserCog,
+  ClipboardList,
+} from 'lucide-react'
+import { UserRole } from '@prisma/client'
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -14,8 +27,20 @@ const navItems = [
   { href: '/configuracoes/sheets', label: 'Configurações', icon: Settings },
 ]
 
-export default function Sidebar() {
+const adminNavItems = [
+  { href: '/configuracoes/usuarios', label: 'Usuários', icon: UserCog },
+  { href: '/configuracoes/auditoria', label: 'Auditoria', icon: ClipboardList },
+]
+
+interface SidebarProps {
+  userRole?: UserRole
+}
+
+export default function Sidebar({ userRole }: SidebarProps) {
   const pathname = usePathname()
+  const isAdmin = userRole === 'ADMIN'
+
+  const allItems = isAdmin ? [...navItems, ...adminNavItems] : navItems
 
   return (
     <aside className="w-64 bg-[#1e3a5f] text-white flex flex-col min-h-screen fixed left-0 top-0 z-10">
@@ -30,10 +55,10 @@ export default function Sidebar() {
       </div>
       <nav className="flex-1 p-4">
         <ul className="space-y-1">
-          {navItems.map((item) => {
+          {allItems.map((item) => {
             const Icon = item.icon
-            const isActive = pathname === item.href ||
-              (item.href !== '/' && pathname.startsWith(item.href))
+            const isActive =
+              pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
             return (
               <li key={item.href}>
                 <Link

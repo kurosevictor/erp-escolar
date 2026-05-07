@@ -6,6 +6,60 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  ADMIN
+  SECRETARIA
+  FINANCEIRO
+  PROFESSOR
+  VISUALIZADOR
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  RESTORE
+}
+
+model User {
+  id          String    @id @default(uuid())
+  supabaseId  String    @unique
+  nome        String
+  email       String    @unique
+  role        UserRole  @default(SECRETARIA)
+  ativo       Boolean   @default(true)
+  avatarUrl   String?
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  auditLogs AuditLog[]
+
+  @@index([email])
+  @@index([supabaseId])
+}
+
+model AuditLog {
+  id        String      @id @default(uuid())
+  userId    String?
+  userEmail String?
+  action    AuditAction
+  entity    String
+  entityId  String
+  before    Json?
+  after     Json?
+  ip        String?
+  userAgent String?
+  createdAt DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([entity, entityId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
 model Turma {
   id        String   @id @default(cuid())
   nome      String
@@ -22,33 +76,38 @@ model Turma {
 }
 
 model Aluno {
-  id                String    @id @default(cuid())
-  nome              String
-  cpf               String    @unique
-  email             String?
-  telefone          String?
-  foto              String?
-  dataNascimento    DateTime?
-  dataMatricula     DateTime
-  situacaoMatricula String    @default("ATIVO")
-  observacoes       String?
-  senha             String?
-  diaVencimento        Int?
-  valorMensalidade     Float?
-  anotacaoFinanceiro   String?
-  cpfResponsavel       String?
-  emListaMaterial      Boolean   @default(false)
-  materialPago         Boolean   @default(false)
-  materialEnviado      Boolean   @default(false)
-  createdAt            DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  nome               String
+  cpf                String    @unique
+  email              String?
+  telefone           String?
+  foto               String?
+  dataNascimento     DateTime?
+  dataMatricula      DateTime
+  situacaoMatricula  String    @default("ATIVO")
+  observacoes        String?
+  senha              String?
+  diaVencimento      Int?
+  valorMensalidade   Float?
+  anotacaoFinanceiro String?
+  cpfResponsavel     String?
+  emListaMaterial    Boolean   @default(false)
+  materialPago       Boolean   @default(false)
+  materialEnviado    Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
 
-  turmaId   String
-  turma     Turma     @relation(fields: [turmaId], references: [id])
+  turmaId String
+  turma   Turma  @relation(fields: [turmaId], references: [id])
 
   pagamentos  Parcela[]
   presencas   Presenca[]
   responsavel Responsavel?
+
+  @@index([nome])
+  @@index([deletedAt])
+  @@index([turmaId])
 }
 
 model Parcela {
@@ -60,10 +119,15 @@ model Parcela {
   dataPagamento DateTime?
   nfEmitida     Boolean   @default(false)
   createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  deletedAt     DateTime?
 
   alunoId String
   aluno   Aluno  @relation(fields: [alunoId], references: [id])
 
+  @@index([alunoId])
+  @@index([vencimento])
+  @@index([deletedAt])
   @@map("Mensalidade")
 }
 
@@ -74,7 +138,6 @@ model Chamada {
 
   turmaId   String
   turma     Turma      @relation(fields: [turmaId], references: [id])
-
   presencas Presenca[]
 }
 
@@ -86,31 +149,35 @@ model Presenca {
   chamada   Chamada @relation(fields: [chamadaId], references: [id])
 
   alunoId String
-  aluno   Aluno   @relation(fields: [alunoId], references: [id])
+  aluno   Aluno  @relation(fields: [alunoId], references: [id])
 
   @@unique([chamadaId, alunoId])
 }
 
 model Material {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   titulo    String
   arquivo   String
-  ordem     Int      @default(0)
-  createdAt DateTime @default(now())
+  ordem     Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  deletedAt DateTime?
 
   turmaId String
   turma   Turma  @relation(fields: [turmaId], references: [id])
 }
 
 model Responsavel {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   nome      String
   cpf       String?
   telefone  String?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  deletedAt DateTime?
 
-  alunoId   String   @unique
-  aluno     Aluno    @relation(fields: [alunoId], references: [id])
+  alunoId String @unique
+  aluno   Aluno  @relation(fields: [alunoId], references: [id])
 }
 
 model ConfiguracaoSheet {
