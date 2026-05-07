@@ -80,14 +80,15 @@ model AuditLog {
 }
 
 model Turma {
-  id        String   @id @default(cuid())
-  nome      String
-  curso     String
-  turno     String
-  horario   String
-  ativo     Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  nome       String
+  curso      String
+  turno      String
+  horario    String
+  ativo      Boolean  @default(true)
+  capacidade Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   alunos      Aluno[]
   chamadas    Chamada[]

@@ -13,7 +13,7 @@ import {
 import {
   LayoutDashboard, Users, DollarSign, CalendarCheck,
   FileText, Package, Cake, Settings, ClipboardList, Plus,
-  UserCheck,
+  UserCheck, BookOpen, TrendingUp, School,
 } from 'lucide-react'
 
 interface AlunoResult {
@@ -71,6 +71,9 @@ export function CommandPalette() {
     { href: '/financeiro', label: 'Financeiro', icon: DollarSign },
     { href: '/financeiro/mensalidades', label: 'Mensalidades', icon: CalendarCheck },
     { href: '/chamada', label: 'Chamada', icon: UserCheck },
+    { href: '/frequencia', label: 'Frequência', icon: BookOpen },
+    { href: '/vagas', label: 'Vagas por Turma', icon: School },
+    { href: '/financeiro/dashboard', label: 'Dashboard Financeiro', icon: TrendingUp },
     { href: '/material', label: 'Material', icon: Package },
     { href: '/nota-fiscal', label: 'Nota Fiscal', icon: FileText },
     { href: '/aniversarios', label: 'Aniversários', icon: Cake },

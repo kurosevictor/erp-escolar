@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { DollarSign, TrendingDown, CheckCircle, Clock } from 'lucide-react'
 import { formatCPF, formatCurrency } from '@/lib/utils'
+import { ExportButton } from '@/components/shared/export-button'
+import { exportToXlsx } from '@/lib/export/xlsx'
 
 interface Parcela {
   id: string
@@ -73,11 +75,47 @@ export default function FinanceiroPage() {
   const totalAReceber = alunos.reduce((sum, a) =>
     sum + a.pagamentos.filter(p => !p.pago).reduce((s, p) => s + p.valor, 0), 0)
 
+  async function exportFinanceiro() {
+    type Row = { aluno: string; cpf: string; turma: string; numero: number; vencimento: string; valor: number; status: string; anotacao: string }
+    const rows: Row[] = []
+    for (const a of alunos) {
+      for (const p of a.pagamentos) {
+        rows.push({
+          aluno: a.nome,
+          cpf: formatCPF(a.cpf),
+          turma: a.turma?.nome ?? '',
+          numero: p.numero,
+          vencimento: new Date(p.vencimento).toLocaleDateString('pt-BR'),
+          valor: p.valor,
+          status: p.pago ? 'Pago' : new Date(p.vencimento) < hoje ? 'Vencido' : 'Pendente',
+          anotacao: anotacoes[a.id] ?? '',
+        })
+      }
+    }
+    await exportToXlsx(
+      rows as unknown as Record<string, unknown>[],
+      [
+        { header: 'Aluno', key: 'aluno', width: 30 },
+        { header: 'CPF', key: 'cpf', width: 16 },
+        { header: 'Turma', key: 'turma', width: 20 },
+        { header: 'Referência', key: 'numero', width: 12 },
+        { header: 'Vencimento', key: 'vencimento', width: 14 },
+        { header: 'Valor', key: 'valor', width: 12, formatter: (v) => Number(v).toFixed(2) },
+        { header: 'Status', key: 'status', width: 12 },
+        { header: 'Anotação', key: 'anotacao', width: 30 },
+      ],
+      'financeiro'
+    )
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Financeiro</h1>
-        <p className="text-gray-500 mt-1">Gestão de pagamentos e inadimplência</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Financeiro</h1>
+          <p className="text-gray-500 mt-1">Gestão de pagamentos e inadimplência</p>
+        </div>
+        <ExportButton onExport={exportFinanceiro} label="Exportar" disabled={loading} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

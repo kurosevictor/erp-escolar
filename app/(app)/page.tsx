@@ -1,9 +1,11 @@
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { AlertCircle, Clock, Users, Cake, BarChart2, CheckCircle2 } from 'lucide-react'
+import { AlertCircle, Clock, Users, Cake, BarChart2, CheckCircle2, School, BookOpen } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { TarefasWidget } from '@/components/shared/tarefas-widget'
+import { getVagasDashboard } from '@/server/actions/vagas.actions'
+import { getAlunosEmRiscoCount } from '@/server/actions/frequencia.actions'
 
 function saudacao(nome: string) {
   const h = new Date().getHours()
@@ -30,6 +32,7 @@ export default async function DashboardPage() {
   const mesInicio = new Date(mesAtual.getFullYear(), mesAtual.getMonth(), 1)
   const mesFim = new Date(mesAtual.getFullYear(), mesAtual.getMonth() + 1, 0, 23, 59, 59)
 
+  const hoje2 = new Date()
   const [
     vencendoHoje,
     vencidasEmAberto,
@@ -39,6 +42,8 @@ export default async function DashboardPage() {
     totalPago,
     totalAReceber,
     totalVencido,
+    vagasData,
+    alunosEmRiscoFreq,
   ] = await Promise.all([
     prisma.parcela.count({ where: { pago: false, vencimento: { gte: hoje, lt: amanha } } }),
     prisma.parcela.count({ where: { pago: false, vencimento: { lt: hoje } } }),
@@ -74,7 +79,14 @@ export default async function DashboardPage() {
       where: { pago: false, vencimento: { lt: hoje } },
       _sum: { valor: true },
     }),
+    getVagasDashboard().catch(() => []),
+    getAlunosEmRiscoCount(hoje2.getMonth() + 1, hoje2.getFullYear()).catch(() => 0),
   ])
+
+  // Vagas widget data
+  const top3Lotadas = [...vagasData]
+    .sort((a, b) => b.ocupacaoPercent - a.ocupacaoPercent)
+    .slice(0, 3)
 
   const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
   const mesNome = meses[mesAtual.getMonth()]
@@ -178,6 +190,55 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Widgets: Vagas + Frequência */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Widget Vagas */}
+        <div className="bg-card rounded-xl border p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-foreground flex items-center gap-2">
+              <School className="w-4 h-4 text-blue-500" /> Ocupação das turmas
+            </h2>
+            <Link href="/vagas" className="text-xs text-primary hover:underline">Ver todas →</Link>
+          </div>
+          <div className="space-y-3">
+            {top3Lotadas.map((t) => (
+              <div key={t.id} className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{t.curso}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex-1 bg-muted rounded-full h-1.5">
+                      <div
+                        className={`h-1.5 rounded-full ${t.ocupacaoPercent >= 100 ? 'bg-red-500' : t.ocupacaoPercent >= 80 ? 'bg-orange-500' : 'bg-emerald-500'}`}
+                        style={{ width: `${Math.min(t.ocupacaoPercent, 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground tabular-nums">{t.ocupacaoPercent}%</span>
+                  </div>
+                </div>
+                {t.vagasLivres <= 0 && (
+                  <span className="ml-3 text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full font-medium shrink-0">Lotada</span>
+                )}
+              </div>
+            ))}
+            {top3Lotadas.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhuma turma cadastrada</p>}
+          </div>
+        </div>
+
+        {/* Widget Frequência */}
+        <Link href="/frequencia" className={`bg-card rounded-xl border p-5 block hover:shadow-sm transition-shadow ${alunosEmRiscoFreq > 0 ? 'border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/10' : ''}`}>
+          <div className="flex items-center gap-4">
+            <div className={`${alunosEmRiscoFreq > 0 ? 'bg-orange-500' : 'bg-emerald-500'} p-3 rounded-lg`}>
+              <BookOpen className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-foreground">{alunosEmRiscoFreq}</p>
+              <p className="text-sm text-muted-foreground">Alunos em risco de frequência</p>
+              <p className="text-xs text-muted-foreground mt-0.5">abaixo de 75% no mês atual</p>
+            </div>
+          </div>
+        </Link>
       </div>
 
       {/* Últimas matrículas */}

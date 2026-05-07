@@ -4,12 +4,17 @@ import { requireAuth } from '@/lib/auth'
 
 export async function GET() {
   const user = await requireAuth()
-  const tarefas = await prisma.tarefa.findMany({
-    where: { autorId: user.id, concluida: false },
-    orderBy: [{ prazo: { sort: 'asc', nulls: 'last' } }, { createdAt: 'asc' }],
-    take: 10,
-  })
-  return NextResponse.json(tarefas)
+  try {
+    const tarefas = await prisma.tarefa.findMany({
+      where: { autorId: user.id, concluida: false },
+      orderBy: [{ prazo: { sort: 'asc', nulls: 'last' } }, { createdAt: 'asc' }],
+      take: 10,
+    })
+    return NextResponse.json(tarefas)
+  } catch (e) {
+    console.error('[tarefas GET]', e)
+    return NextResponse.json([], { status: 200 })
+  }
 }
 
 export async function POST(req: NextRequest) {

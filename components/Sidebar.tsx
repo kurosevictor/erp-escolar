@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, DollarSign, Settings, GraduationCap,
   CalendarCheck, FileText, Package, Cake, UserCog, ClipboardList,
-  Receipt, UserCheck, MessageSquare,
+  Receipt, UserCheck, MessageSquare, BookOpen, TrendingUp, School,
 } from 'lucide-react'
 import { UserRole } from '@prisma/client'
 
@@ -15,6 +15,9 @@ const navItems = [
   { href: '/financeiro/mensalidades', label: 'Mensalidades', icon: CalendarCheck },
   { href: '/despesas', label: 'Despesas', icon: Receipt },
   { href: '/chamada', label: 'Chamada', icon: UserCheck },
+  { href: '/frequencia', label: 'Frequência', icon: BookOpen },
+  { href: '/vagas', label: 'Vagas', icon: School },
+  { href: '/financeiro/dashboard', label: 'Financeiro Dashboard', icon: TrendingUp },
   { href: '/nota-fiscal', label: 'Nota Fiscal', icon: FileText },
   { href: '/material', label: 'Material', icon: Package },
   { href: '/aniversarios', label: 'Aniversários', icon: Cake },

@@ -17,7 +17,10 @@ export function TarefasWidget() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    fetch('/api/tarefas').then(r => r.json()).then(d => { setTarefas(d); setLoading(false) })
+    fetch('/api/tarefas')
+      .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json() })
+      .then(d => { setTarefas(Array.isArray(d) ? d : []); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [])
 
   async function adicionar() {

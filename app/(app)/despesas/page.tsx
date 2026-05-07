@@ -21,11 +21,17 @@ export default function DespesasPage() {
 
   async function load() {
     setLoading(true)
-    const res = await fetch('/api/despesas')
-    const data = await res.json()
-    setDespesas(data.despesas)
-    setTotalMensalidadesPagas(data.totalMensalidadesPagas)
-    setLoading(false)
+    try {
+      const res = await fetch('/api/despesas')
+      if (!res.ok) throw new Error(String(res.status))
+      const data = await res.json()
+      setDespesas(data.despesas ?? [])
+      setTotalMensalidadesPagas(data.totalMensalidadesPagas ?? 0)
+    } catch {
+      // silently fail, leave empty state
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => { load() }, [])

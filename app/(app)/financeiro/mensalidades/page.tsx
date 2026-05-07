@@ -3,6 +3,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { CheckCircle, XCircle, Loader2, RefreshCw, PlusCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { ExportButton } from '@/components/shared/export-button'
+import { exportToXlsx } from '@/lib/export/xlsx'
 
 interface Mensalidade {
   id: string
@@ -81,11 +83,35 @@ export default function MensalidadesPage() {
   const pagas = mensalidades.filter(m => m.pago).length
   const pendentes = mensalidades.length - pagas
 
+  async function exportMensalidades() {
+    type Row = { aluno: string; vencimento: string; valor: string; status: string }
+    const rows: Row[] = mensalidades.map(m => ({
+      aluno: alunos[m.alunoId]?.nome ?? m.alunoId,
+      vencimento: format(new Date(m.vencimento), 'dd/MM/yyyy', { locale: ptBR }),
+      valor: m.valor > 0 ? m.valor.toFixed(2) : '0,00',
+      status: m.pago ? 'Paga' : 'Pendente',
+    }))
+    await exportToXlsx(
+      rows as unknown as Record<string, unknown>[],
+      [
+        { header: 'Aluno', key: 'aluno', width: 30 },
+        { header: 'Referência', key: 'referencia', width: 14, formatter: () => `${MESES[mes - 1]}/${ano}` },
+        { header: 'Vencimento', key: 'vencimento', width: 14 },
+        { header: 'Valor (R$)', key: 'valor', width: 14 },
+        { header: 'Status', key: 'status', width: 12 },
+      ],
+      `mensalidades-${mesStr}`
+    )
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Mensalidades</h1>
-        <p className="text-gray-500 mt-1">Gerencie e acompanhe os pagamentos mensais</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Mensalidades</h1>
+          <p className="text-gray-500 mt-1">Gerencie e acompanhe os pagamentos mensais</p>
+        </div>
+        <ExportButton onExport={exportMensalidades} label="Exportar" disabled={loading || mensalidades.length === 0} />
       </div>
 
       {/* Seletor de mês + gerar */}

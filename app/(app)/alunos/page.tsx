@@ -3,6 +3,8 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Plus, Search, LayoutGrid, List } from 'lucide-react'
 import { formatCPF, getSituacaoColor, getSituacaoLabel } from '@/lib/utils'
+import { ExportButton } from '@/components/shared/export-button'
+import { exportToXlsx } from '@/lib/export/xlsx'
 
 interface Turma {
   id: string
@@ -67,6 +69,28 @@ export default function AlunosPage() {
 
   const totalPages = Math.ceil(total / 20)
 
+  async function exportAlunos() {
+    const params = new URLSearchParams({ limit: '1000', search, sort })
+    if (filters.curso) params.set('curso', filters.curso)
+    if (filters.turno) params.set('turno', filters.turno)
+    if (filters.matricula) params.set('matricula', filters.matricula)
+    const data = await fetch(`/api/alunos?${params}`).then(r => r.json())
+    const rows = (data.alunos ?? []) as Aluno[]
+    await exportToXlsx(
+      rows as unknown as Record<string, unknown>[],
+      [
+        { header: 'Nome', key: 'nome', width: 30 },
+        { header: 'CPF', key: 'cpf', width: 16, formatter: (v) => formatCPF(String(v ?? '')) },
+        { header: 'Turma', key: 'turma', width: 20, formatter: (_, row) => (row as unknown as Aluno).turma.nome },
+        { header: 'Turno', key: 'turno', width: 12, formatter: (_, row) => (row as unknown as Aluno).turma.turno },
+        { header: 'Situação', key: 'situacaoMatricula', width: 14, formatter: (v) => getSituacaoLabel(String(v ?? '')) },
+        { header: 'Dia Vencimento', key: 'diaVencimento', width: 16 },
+        { header: 'Mensalidade', key: 'valorMensalidade', width: 16, formatter: (v) => v != null ? Number(v).toFixed(2) : '' },
+      ],
+      'alunos'
+    )
+  }
+
   function getParcelaStatus(pagamentos: Parcela[]) {
     const total = pagamentos.length
     const pagas = pagamentos.filter(p => p.pago).length
@@ -81,13 +105,16 @@ export default function AlunosPage() {
           <h1 className="text-2xl font-bold text-gray-900">Alunos</h1>
           <p className="text-gray-500 mt-1">{total} alunos encontrados</p>
         </div>
-        <Link
-          href="/alunos/novo"
-          className="flex items-center gap-2 bg-[#1e3a5f] text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Novo Aluno
-        </Link>
+        <div className="flex items-center gap-2">
+          <ExportButton onExport={exportAlunos} label="Exportar" />
+          <Link
+            href="/alunos/novo"
+            className="flex items-center gap-2 bg-[#1e3a5f] text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Novo Aluno
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-4">

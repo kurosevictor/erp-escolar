@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth'
 
 const DESPESAS_INICIAIS = [
   { nome: 'Aluguel', valor: 8318.98, diaVencimento: 10 },
@@ -24,23 +25,30 @@ const DESPESAS_INICIAIS = [
 ]
 
 export async function GET() {
-  const count = await prisma.despesa.count()
-  if (count === 0) {
-    await prisma.despesa.createMany({ data: DESPESAS_INICIAIS })
+  await requireAuth()
+
+  try {
+    const count = await prisma.despesa.count()
+    if (count === 0) {
+      await prisma.despesa.createMany({ data: DESPESAS_INICIAIS })
+    }
+
+    const [despesas, parcelasPagas] = await Promise.all([
+      prisma.despesa.findMany({ orderBy: [{ diaVencimento: 'asc' }, { createdAt: 'asc' }] }),
+      prisma.parcela.findMany({ where: { pago: true }, select: { valor: true } }),
+    ])
+
+    const totalMensalidadesPagas = parcelasPagas.reduce((sum, p) => sum + p.valor, 0)
+
+    return NextResponse.json({ despesas, totalMensalidadesPagas })
+  } catch (e) {
+    console.error('[despesas GET]', e)
+    return NextResponse.json({ despesas: [], totalMensalidadesPagas: 0 }, { status: 500 })
   }
-
-  const [despesas, totalMensalidadesPagas] = await Promise.all([
-    prisma.despesa.findMany({ orderBy: [{ diaVencimento: 'asc' }, { createdAt: 'asc' }] }),
-    prisma.parcela.aggregate({ where: { pago: true }, _sum: { valor: true } }),
-  ])
-
-  return NextResponse.json({
-    despesas,
-    totalMensalidadesPagas: totalMensalidadesPagas._sum.valor ?? 0,
-  })
 }
 
 export async function POST(request: NextRequest) {
+  await requireAuth()
   const body = await request.json()
   const despesa = await prisma.despesa.create({
     data: {
