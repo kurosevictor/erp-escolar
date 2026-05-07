@@ -2,7 +2,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Upload, User } from 'lucide-react'
+import { ArrowLeft, Upload, User, ScanText } from 'lucide-react'
+import { toast } from 'sonner'
+import { OcrUploadDialog } from '@/components/shared/ocr-upload-dialog'
+import type { DadosExtraidos } from '@/server/actions/ocr.actions'
 
 interface Turma {
   id: string
@@ -51,6 +54,7 @@ export default function AlunoForm({ initialData, mode }: AlunoFormProps) {
   const [turmas, setTurmas] = useState<Turma[]>([])
   const [fotoPreview, setFotoPreview] = useState<string | null>(initialData?.foto || null)
   const [fotoFile, setFotoFile] = useState<File | null>(null)
+  const [ocrOpen, setOcrOpen] = useState(false)
 
   const [form, setForm] = useState({
     nome: initialData?.nome || '',
@@ -77,6 +81,25 @@ export default function AlunoForm({ initialData, mode }: AlunoFormProps) {
   }, [])
 
   const turmaSelecionada = turmas.find(t => t.id === form.turmaId)
+
+  function aplicarDadosOcr(dados: DadosExtraidos) {
+    setForm(f => ({
+      ...f,
+      ...(dados.nome && { nome: dados.nome }),
+      ...(dados.cpf && { cpf: dados.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') }),
+      ...(dados.dataNascimento && {
+        dataNascimento: (() => {
+          const partes = dados.dataNascimento!.split('/')
+          if (partes.length === 3) {
+            const ano = partes[2].length === 2 ? `20${partes[2]}` : partes[2]
+            return `${ano}-${partes[1]}-${partes[0]}`
+          }
+          return f.dataNascimento
+        })(),
+      }),
+    }))
+    toast.success('Dados aplicados — revise antes de salvar')
+  }
 
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -131,6 +154,7 @@ export default function AlunoForm({ initialData, mode }: AlunoFormProps) {
   }
 
   return (
+    <>
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center gap-4">
         <Link href={mode === 'novo' ? '/alunos' : `/alunos/${initialData?.id}`}
@@ -162,6 +186,18 @@ export default function AlunoForm({ initialData, mode }: AlunoFormProps) {
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFotoChange} />
           </div>
+        </div>
+
+        {/* OCR */}
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setOcrOpen(true)}
+            className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <ScanText className="w-4 h-4" />
+            Preencher via documento
+          </button>
         </div>
 
         {/* Dados pessoais */}
@@ -263,5 +299,13 @@ export default function AlunoForm({ initialData, mode }: AlunoFormProps) {
         </div>
       </form>
     </div>
+
+      {ocrOpen && (
+        <OcrUploadDialog
+          onAplicar={aplicarDadosOcr}
+          onClose={() => setOcrOpen(false)}
+        />
+      )}
+    </>
   )
 }
