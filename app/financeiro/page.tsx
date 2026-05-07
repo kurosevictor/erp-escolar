@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { DollarSign, TrendingDown, CheckCircle, Clock } from 'lucide-react'
 import { formatCPF, formatCurrency } from '@/lib/utils'
@@ -18,12 +18,34 @@ interface Aluno {
   cpf: string
   turma: { nome: string; curso: string }
   pagamentos: Parcela[]
+  anotacaoFinanceiro: string | null
 }
 
 export default function FinanceiroPage() {
   const [alunos, setAlunos] = useState<Aluno[]>([])
   const [loading, setLoading] = useState(true)
   const [apenasInadimplentes, setApenasInadimplentes] = useState(false)
+  const [anotacoes, setAnotacoes] = useState<Record<string, string>>({})
+  const debounceRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+
+  useEffect(() => {
+    if (alunos.length === 0) return
+    const inicial: Record<string, string> = {}
+    alunos.forEach(a => { inicial[a.id] = a.anotacaoFinanceiro || '' })
+    setAnotacoes(inicial)
+  }, [alunos])
+
+  function salvarAnotacao(alunoId: string, texto: string) {
+    setAnotacoes(prev => ({ ...prev, [alunoId]: texto }))
+    clearTimeout(debounceRef.current[alunoId])
+    debounceRef.current[alunoId] = setTimeout(() => {
+      fetch(`/api/alunos/${alunoId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ anotacaoFinanceiro: texto || null }),
+      })
+    }, 600)
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -121,6 +143,7 @@ export default function FinanceiroPage() {
                 <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">Pagas</th>
                 <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">Vencidas</th>
                 <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">Em Aberto</th>
+                <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">Anotação</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -151,6 +174,15 @@ export default function FinanceiroPage() {
                     </td>
                     <td className="px-4 py-3 text-sm font-semibold">
                       {emAberto > 0 ? <span className="text-red-600">{formatCurrency(emAberto)}</span> : '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        value={anotacoes[aluno.id] || ''}
+                        onChange={e => salvarAnotacao(aluno.id, e.target.value)}
+                        placeholder="Anotação..."
+                        className="w-36 text-xs border border-gray-200 rounded px-2 py-1 text-gray-700 placeholder-gray-300 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-gray-50"
+                      />
                     </td>
                   </tr>
                 )

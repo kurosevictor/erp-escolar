@@ -7,11 +7,14 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const { pago } = await request.json()
+  const body = await request.json()
+  const updates: Record<string, unknown> = {}
+  if ('pago' in body) updates.pago = body.pago
+  if ('nfEmitida' in body) updates.nfEmitida = body.nfEmitida
 
   const { data, error } = await supabase
     .from('Mensalidade')
-    .update({ pago })
+    .update(updates)
     .eq('id', id)
     .select()
     .single()

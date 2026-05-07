@@ -40,6 +40,25 @@ export async function PUT(
   return NextResponse.json(aluno)
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const data = await request.json()
+  const aluno = await prisma.aluno.update({
+    where: { id },
+    data: {
+      ...('anotacaoFinanceiro' in data && { anotacaoFinanceiro: data.anotacaoFinanceiro ?? null }),
+      ...('cpfResponsavel' in data && { cpfResponsavel: data.cpfResponsavel ?? null }),
+      ...('materialPago' in data && { materialPago: data.materialPago }),
+      ...('materialEnviado' in data && { materialEnviado: data.materialEnviado }),
+      ...('emListaMaterial' in data && { emListaMaterial: data.emListaMaterial }),
+    },
+  })
+  return NextResponse.json(aluno)
+}
+
 export async function DELETE(
   _: NextRequest,
   { params }: { params: Promise<{ id: string }> }

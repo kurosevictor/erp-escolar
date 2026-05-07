@@ -33,16 +33,22 @@ model Aluno {
   situacaoMatricula String    @default("ATIVO")
   observacoes       String?
   senha             String?
-  diaVencimento     Int?
-  valorMensalidade  Float?
-  createdAt         DateTime  @default(now())
+  diaVencimento        Int?
+  valorMensalidade     Float?
+  anotacaoFinanceiro   String?
+  cpfResponsavel       String?
+  emListaMaterial      Boolean   @default(false)
+  materialPago         Boolean   @default(false)
+  materialEnviado      Boolean   @default(false)
+  createdAt            DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
   turmaId   String
   turma     Turma     @relation(fields: [turmaId], references: [id])
 
-  pagamentos Parcela[]
-  presencas  Presenca[]
+  pagamentos  Parcela[]
+  presencas   Presenca[]
+  responsavel Responsavel?
 }
 
 model Parcela {
@@ -52,6 +58,7 @@ model Parcela {
   vencimento    DateTime
   pago          Boolean   @default(false)
   dataPagamento DateTime?
+  nfEmitida     Boolean   @default(false)
   createdAt     DateTime  @default(now())
 
   alunoId String
@@ -93,6 +100,17 @@ model Material {
 
   turmaId String
   turma   Turma  @relation(fields: [turmaId], references: [id])
+}
+
+model Responsavel {
+  id        String   @id @default(cuid())
+  nome      String
+  cpf       String?
+  telefone  String?
+  createdAt DateTime @default(now())
+
+  alunoId   String   @unique
+  aluno     Aluno    @relation(fields: [alunoId], references: [id])
 }
 
 model ConfiguracaoSheet {
