@@ -1,163 +1,205 @@
-'use client'
-import { useEffect, useState } from 'react'
-import { Users, AlertCircle, CheckCircle, BookOpen } from 'lucide-react'
-import {
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
-} from 'recharts'
+import { requireAuth } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { formatCurrency, getSituacaoColor, getSituacaoLabel } from '@/lib/utils'
+import { AlertCircle, Clock, Users, Cake, BarChart2, CheckCircle2 } from 'lucide-react'
+import { formatCurrency } from '@/lib/utils'
+import { TarefasWidget } from '@/components/shared/tarefas-widget'
 
-interface DashboardData {
-  totalAlunos: number
-  inadimplentes: number
-  alunosAtivos: number
-  totalCursos: number
-  porCurso: { curso: string; total: number }[]
-  porPagamento: { situacao: string; total: number }[]
-  recentes: {
-    id: string
-    nome: string
-    curso: string
-    turno: string
-    foto: string | null
-    situacaoPagamento: string
-  }[]
-}
-
-const COLORS = ['#1e3a5f', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe']
-const PAG_COLORS: Record<string, string> = {
-  EM_DIA: '#22c55e',
-  INADIMPLENTE: '#ef4444',
-  ISENTO: '#3b82f6',
-}
-
-export default function Dashboard() {
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/dashboard')
-      .then(r => r.json())
-      .then(d => {
-        if (d.error) { console.error('Dashboard API error:', d.error); setLoading(false); return }
-        setData({
-          ...d,
-          porCurso: d.porCurso ?? [],
-          porPagamento: d.porPagamento ?? [],
-          recentes: d.recentes ?? [],
-        })
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-      </div>
-    )
+function saudacao(nome: string) {
+  const h = new Date().getHours()
+  const periodo = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'
+  const dias = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado']
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro']
+  const now = new Date()
+  return {
+    texto: `${periodo}, ${nome.split(' ')[0]}`,
+    data: `${dias[now.getDay()]}, ${now.getDate()} de ${meses[now.getMonth()]} de ${now.getFullYear()}`,
   }
+}
 
-  if (!data) return <p className="text-red-500">Erro ao carregar dados</p>
+export default async function DashboardPage() {
+  const user = await requireAuth()
+  const { texto, data } = saudacao(user.nome)
+
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  const amanha = new Date(hoje)
+  amanha.setDate(amanha.getDate() + 1)
+
+  const mesAtual = new Date()
+  const mesInicio = new Date(mesAtual.getFullYear(), mesAtual.getMonth(), 1)
+  const mesFim = new Date(mesAtual.getFullYear(), mesAtual.getMonth() + 1, 0, 23, 59, 59)
+
+  const [
+    vencendoHoje,
+    vencidasEmAberto,
+    inadimplentes,
+    aniversariantes,
+    ultimosAlunos,
+    totalPago,
+    totalAReceber,
+    totalVencido,
+  ] = await Promise.all([
+    prisma.parcela.count({ where: { pago: false, vencimento: { gte: hoje, lt: amanha } } }),
+    prisma.parcela.count({ where: { pago: false, vencimento: { lt: hoje } } }),
+    prisma.aluno.count({ where: { pagamentos: { some: { pago: false, vencimento: { lt: hoje } } } } }),
+    prisma.aluno.findMany({
+      where: {
+        dataNascimento: {
+          not: null,
+        },
+      },
+      select: { id: true, nome: true, dataNascimento: true, turma: { select: { nome: true } } },
+    }).then((alunos) =>
+      alunos.filter((a) => {
+        if (!a.dataNascimento) return false
+        const dn = new Date(a.dataNascimento)
+        return dn.getDate() === hoje.getDate() && dn.getMonth() === hoje.getMonth()
+      })
+    ),
+    prisma.aluno.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: { id: true, nome: true, turma: { select: { nome: true } }, createdAt: true, foto: true },
+    }),
+    prisma.parcela.aggregate({
+      where: { pago: true, dataPagamento: { gte: mesInicio, lte: mesFim } },
+      _sum: { valor: true },
+    }),
+    prisma.parcela.aggregate({
+      where: { pago: false, vencimento: { gte: hoje } },
+      _sum: { valor: true },
+    }),
+    prisma.parcela.aggregate({
+      where: { pago: false, vencimento: { lt: hoje } },
+      _sum: { valor: true },
+    }),
+  ])
+
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+  const mesNome = meses[mesAtual.getMonth()]
 
   const cards = [
-    { label: 'Total de Alunos', value: data.totalAlunos, icon: Users, color: 'bg-blue-600' },
-    { label: 'Inadimplentes', value: data.inadimplentes, icon: AlertCircle, color: 'bg-red-500' },
-    { label: 'Alunos Ativos', value: data.alunosAtivos, icon: CheckCircle, color: 'bg-green-500' },
-    { label: 'Total de Cursos', value: data.totalCursos, icon: BookOpen, color: 'bg-purple-500' },
+    {
+      label: 'Vencendo hoje',
+      value: vencendoHoje,
+      icon: Clock,
+      color: 'bg-yellow-500',
+      bg: 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200',
+      href: '/financeiro?filtro=vencendo-hoje',
+    },
+    {
+      label: 'Vencidas em aberto',
+      value: vencidasEmAberto,
+      icon: AlertCircle,
+      color: 'bg-red-500',
+      bg: 'bg-red-50 dark:bg-red-950/20 border-red-200',
+      href: '/financeiro?filtro=vencidas',
+    },
+    {
+      label: 'Alunos inadimplentes',
+      value: inadimplentes,
+      icon: Users,
+      color: 'bg-orange-500',
+      bg: 'bg-orange-50 dark:bg-orange-950/20 border-orange-200',
+      href: '/financeiro?filtro=inadimplentes',
+    },
+    {
+      label: 'Aniversariantes hoje',
+      value: aniversariantes.length,
+      icon: Cake,
+      color: 'bg-blue-500',
+      bg: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200',
+      href: '/aniversarios',
+    },
   ]
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-1">Visão geral do sistema</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{texto} 👋</h1>
+          <p className="text-muted-foreground mt-1 capitalize">{data}</p>
+        </div>
+        <Link
+          href="/dashboard/analytics"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground border rounded-lg px-3 py-2 hover:bg-accent transition-colors"
+        >
+          <BarChart2 className="w-4 h-4" />
+          Dashboard Analítico
+        </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Cards de alerta */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((card) => {
           const Icon = card.icon
           return (
-            <div key={card.label} className="bg-white rounded-xl shadow-sm p-6 flex items-center gap-4 hover:shadow-md transition-shadow">
-              <div className={`${card.color} p-3 rounded-lg`}>
-                <Icon className="w-6 h-6 text-white" />
+            <Link key={card.label} href={card.href} className={`rounded-xl border p-5 flex items-center gap-4 hover:shadow-sm transition-all ${card.bg}`}>
+              <div className={`${card.color} p-2.5 rounded-lg`}>
+                <Icon className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">{card.label}</p>
-                <p className="text-2xl font-bold text-gray-900">{card.value}</p>
+                <p className="text-2xl font-bold text-foreground">{card.value}</p>
+                <p className="text-sm text-muted-foreground">{card.label}</p>
               </div>
-            </div>
+            </Link>
           )
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Distribuição por Curso</h2>
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie
-                data={data.porCurso}
-                dataKey="total"
-                nameKey="curso"
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                label={({ name, percent }: { name?: string; percent?: number }) => `${name ?? ''} (${((percent ?? 0) * 100).toFixed(0)}%)`}
-              >
-                {data.porCurso.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Tarefas */}
+        <div className="lg:col-span-2">
+          <TarefasWidget />
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Situação de Pagamento</h2>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={data.porPagamento}>
-              <XAxis dataKey="situacao" tickFormatter={(v: string) => getSituacaoLabel(v)} />
-              <YAxis />
-              <Tooltip labelFormatter={(label) => getSituacaoLabel(String(label))} />
-              <Bar dataKey="total" name="Alunos" radius={[4, 4, 0, 0]}>
-                {data.porPagamento.map((entry, i) => (
-                  <Cell key={i} fill={PAG_COLORS[entry.situacao] || '#94a3b8'} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+        {/* Resumo financeiro */}
+        <div className="bg-card rounded-xl border p-5 space-y-4">
+          <h2 className="font-semibold text-foreground">{mesNome} {mesAtual.getFullYear()}</h2>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-500" /> Pago
+              </span>
+              <span className="font-semibold text-green-600">{formatCurrency(totalPago._sum.valor ?? 0)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground flex items-center gap-2">
+                <Clock className="w-4 h-4 text-blue-500" /> A receber
+              </span>
+              <span className="font-semibold text-blue-600">{formatCurrency(totalAReceber._sum.valor ?? 0)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-500" /> Vencido
+              </span>
+              <span className="font-semibold text-red-600">{formatCurrency(totalVencido._sum.valor ?? 0)}</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Alunos Recentes</h2>
+      {/* Últimas matrículas */}
+      <div className="bg-card rounded-xl border p-5">
+        <h2 className="font-semibold text-foreground mb-4">Últimas Matrículas</h2>
         <div className="space-y-3">
-          {data.recentes.map((aluno) => (
-            <Link
-              key={aluno.id}
-              href={`/alunos/${aluno.id}`}
-              className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                {aluno.foto ? (
+          {ultimosAlunos.map((a) => (
+            <Link key={a.id} href={`/alunos/${a.id}`} className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent transition-colors">
+              <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                {a.foto
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={aluno.foto} alt={aluno.nome} className="w-10 h-10 rounded-full object-cover" />
-                ) : (
-                  <span className="text-blue-600 font-semibold text-sm">
-                    {aluno.nome.charAt(0)}
-                  </span>
-                )}
+                  ? <img src={a.foto} alt={a.nome} className="w-9 h-9 rounded-full object-cover" />
+                  : <span className="text-blue-600 dark:text-blue-400 font-bold text-sm">{a.nome.charAt(0)}</span>
+                }
               </div>
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">{aluno.nome}</p>
-                <p className="text-sm text-gray-500">{aluno.curso} • {getSituacaoLabel(aluno.turno)}</p>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm text-foreground truncate">{a.nome}</p>
+                <p className="text-xs text-muted-foreground">{a.turma?.nome}</p>
               </div>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getSituacaoColor(aluno.situacaoPagamento)}`}>
-                {getSituacaoLabel(aluno.situacaoPagamento)}
-              </span>
+              <p className="text-xs text-muted-foreground shrink-0">
+                {new Date(a.createdAt).toLocaleDateString('pt-BR')}
+              </p>
             </Link>
           ))}
         </div>

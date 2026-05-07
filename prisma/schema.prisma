@@ -21,6 +21,21 @@ enum AuditAction {
   RESTORE
 }
 
+enum StatusPresenca {
+  PRESENTE
+  AUSENTE
+  JUSTIFICADO
+  ATESTADO
+}
+
+enum DestinatarioComunicado {
+  TODOS
+  TURMA
+  RESPONSAVEIS
+  PROFESSORES
+  STAFF
+}
+
 model User {
   id          String    @id @default(uuid())
   supabaseId  String    @unique
@@ -34,7 +49,11 @@ model User {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  auditLogs AuditLog[]
+  auditLogs    AuditLog[]
+  tarefas      Tarefa[]
+  chamadas     Chamada[]
+  comunicados  Comunicado[]
+  notificacoes Notificacao[]
 
   @@index([email])
   @@index([supabaseId])
@@ -70,9 +89,10 @@ model Turma {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  alunos    Aluno[]
-  chamadas  Chamada[]
-  materiais Material[]
+  alunos      Aluno[]
+  chamadas    Chamada[]
+  materiais   Material[]
+  comunicados Comunicado[]
 }
 
 model Aluno {
@@ -132,26 +152,37 @@ model Parcela {
 }
 
 model Chamada {
-  id        String   @id @default(cuid())
-  data      DateTime
-  createdAt DateTime @default(now())
-
+  id        String   @id @default(uuid())
   turmaId   String
+  data      DateTime
+  autorId   String
+  fechada   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   turma     Turma      @relation(fields: [turmaId], references: [id])
+  autor     User       @relation(fields: [autorId], references: [id])
   presencas Presenca[]
+
+  @@unique([turmaId, data])
+  @@index([turmaId])
+  @@index([data])
 }
 
 model Presenca {
-  id       String  @id @default(cuid())
-  presente Boolean
+  id         String         @id @default(uuid())
+  chamadaId  String
+  alunoId    String
+  status     StatusPresenca @default(AUSENTE)
+  observacao String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 
-  chamadaId String
-  chamada   Chamada @relation(fields: [chamadaId], references: [id])
-
-  alunoId String
-  aluno   Aluno  @relation(fields: [alunoId], references: [id])
+  chamada Chamada @relation(fields: [chamadaId], references: [id])
+  aluno   Aluno   @relation(fields: [alunoId], references: [id])
 
   @@unique([chamadaId, alunoId])
+  @@index([alunoId])
 }
 
 model Material {
@@ -188,4 +219,80 @@ model ConfiguracaoSheet {
   ativo     Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Despesa {
+  id            String    @id @default(cuid())
+  nome          String
+  valor         Float
+  diaVencimento Int
+  pago          Boolean   @default(false)
+  dataPagamento DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([diaVencimento])
+  @@index([pago])
+}
+
+model Tarefa {
+  id          String    @id @default(uuid())
+  titulo      String
+  prazo       DateTime?
+  concluida   Boolean   @default(false)
+  concluidaEm DateTime?
+  autorId     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  autor User @relation(fields: [autorId], references: [id])
+
+  @@index([autorId, concluida])
+}
+
+model Comunicado {
+  id           String                 @id @default(uuid())
+  titulo       String
+  corpo        String
+  destinatario DestinatarioComunicado @default(TODOS)
+  turmaId      String?
+  autorId      String
+  publicadoEm  DateTime?
+  rascunho     Boolean                @default(true)
+  fixado       Boolean                @default(false)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  deletedAt    DateTime?
+
+  turma Turma? @relation(fields: [turmaId], references: [id])
+  autor User   @relation(fields: [autorId], references: [id])
+
+  @@index([publicadoEm])
+  @@index([destinatario])
+  @@index([deletedAt])
+}
+
+model Notificacao {
+  id        String    @id @default(uuid())
+  userId    String
+  titulo    String
+  mensagem  String?
+  link      String?
+  lida      Boolean   @default(false)
+  lidaEm    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, lida])
+  @@index([createdAt])
+}
+
+model Configuracao {
+  id        String   @id @default(uuid())
+  chave     String   @unique
+  valor     Json
+  updatedAt DateTime @updatedAt
+
+  @@index([chave])
 }
