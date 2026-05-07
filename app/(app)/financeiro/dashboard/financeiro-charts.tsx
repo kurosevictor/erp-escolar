@@ -1,9 +1,10 @@
 'use client'
 import {
-  BarChart, Bar, LineChart, Line, ComposedChart,
+  Bar, Line, ComposedChart,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell, ResponsiveContainer,
 } from 'recharts'
+import { useRouter } from 'next/navigation'
 import type { ReceitaMensal, InadimplenciaFaixa, ReceitaCurso } from '@/server/actions/financeiro-dashboard.actions'
 import { formatCurrency } from '@/lib/utils'
 import { ExportButton } from '@/components/shared/export-button'
@@ -40,6 +41,8 @@ export function ReceitaMensalChart({ data }: { data: ReceitaMensal[] }) {
 }
 
 export function InadimplenciaTable({ data }: { data: InadimplenciaFaixa[] }) {
+  const router = useRouter()
+
   async function exportInadimplencia() {
     await exportToXlsx(
       data as unknown as Record<string, unknown>[],
@@ -68,7 +71,11 @@ export function InadimplenciaTable({ data }: { data: InadimplenciaFaixa[] }) {
         </thead>
         <tbody className="divide-y divide-border">
           {data.map((f) => (
-            <tr key={f.faixa} className="hover:bg-accent/50 transition-colors">
+            <tr
+              key={f.faixa}
+              onClick={() => f.alunos > 0 && router.push(`/financeiro?filtro=inadimplentes&faixa=${f.diasMin}_${f.diasMax ?? 9999}`)}
+              className={`transition-colors ${f.alunos > 0 ? 'cursor-pointer hover:bg-accent/50' : 'opacity-50'}`}
+            >
               <td className="py-3 text-sm font-medium">{f.faixa}</td>
               <td className="py-3 text-center text-sm">{f.alunos}</td>
               <td className="py-3 text-right text-sm font-semibold text-red-600">{formatCurrency(f.valorEmAberto)}</td>

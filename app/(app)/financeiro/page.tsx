@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { DollarSign, TrendingDown, CheckCircle, Clock } from 'lucide-react'
+import { DollarSign, TrendingDown, CheckCircle, Clock, X } from 'lucide-react'
 import { formatCPF, formatCurrency } from '@/lib/utils'
 import { ExportButton } from '@/components/shared/export-button'
 import { exportToXlsx } from '@/lib/export/xlsx'
@@ -24,6 +25,8 @@ interface Aluno {
 }
 
 export default function FinanceiroPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [alunos, setAlunos] = useState<Aluno[]>([])
   const [loading, setLoading] = useState(true)
   const [apenasInadimplentes, setApenasInadimplentes] = useState(false)
@@ -59,6 +62,48 @@ export default function FinanceiroPage() {
   }, [apenasInadimplentes])
 
   const hoje = new Date()
+
+  const filtroParam = searchParams.get('filtro')
+  const faixaParam = searchParams.get('faixa')
+
+  const faixa = faixaParam
+    ? (() => {
+        const [min, max] = faixaParam.split('_').map(Number)
+        return { diasMin: min, diasMax: isNaN(max) || max >= 9999 ? null : max }
+      })()
+    : null
+
+  function clearFiltro() {
+    router.push('/financeiro')
+  }
+
+  function alunoPassaFiltro(a: Aluno): boolean {
+    if (!filtroParam && !faixa) return true
+    const vencidas = a.pagamentos.filter(p => !p.pago && new Date(p.vencimento) < hoje)
+    if (filtroParam === 'vencendo-hoje') {
+      const amanha = new Date(hoje); amanha.setDate(amanha.getDate() + 1)
+      return a.pagamentos.some(p => !p.pago && new Date(p.vencimento) >= hoje && new Date(p.vencimento) < amanha)
+    }
+    if (filtroParam === 'vencidas' || filtroParam === 'inadimplentes') {
+      return vencidas.length > 0
+    }
+    if (faixa) {
+      return vencidas.some(p => {
+        const dias = Math.floor((hoje.getTime() - new Date(p.vencimento).getTime()) / 86400000)
+        return dias >= faixa.diasMin && (faixa.diasMax === null || dias <= faixa.diasMax)
+      })
+    }
+    return true
+  }
+
+  const alunosFiltrados = alunos.filter(alunoPassaFiltro)
+
+  const FAIXA_LABELS: Record<string, string> = {
+    'vencendo-hoje': 'Vencendo hoje',
+    'vencidas': 'Parcelas vencidas',
+    'inadimplentes': 'Inadimplentes',
+  }
+  const filtroLabel = filtroParam ? FAIXA_LABELS[filtroParam] : faixaParam ? `Atraso: ${faixaParam.replace('_9999', '+')} dias` : null
 
   const alunosComInadimplencia = alunos.filter(a =>
     a.pagamentos.some(p => !p.pago && new Date(p.vencimento) < hoje)
@@ -157,14 +202,22 @@ export default function FinanceiroPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm p-4 flex items-center gap-4">
+      <div className="bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 flex-wrap">
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={apenasInadimplentes}
             onChange={e => setApenasInadimplentes(e.target.checked)}
             className="w-4 h-4 text-blue-600" />
           <span className="text-sm font-medium text-gray-700">Apenas com parcelas vencidas</span>
         </label>
-        <span className="text-sm text-gray-500">({alunos.length} alunos exibidos)</span>
+        <span className="text-sm text-gray-500">({alunosFiltrados.length} alunos exibidos)</span>
+        {filtroLabel && (
+          <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-medium px-2 py-1 rounded-full">
+            <span>{filtroLabel}</span>
+            <button onClick={clearFiltro} className="ml-1 hover:text-blue-900">
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
       </div>
 
       {loading ? (
@@ -185,7 +238,7 @@ export default function FinanceiroPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {alunos.map(aluno => {
+              {alunosFiltrados.map(aluno => {
                 const pagas = aluno.pagamentos.filter(p => p.pago).length
                 const total = aluno.pagamentos.length
                 const vencidas = aluno.pagamentos.filter(p => !p.pago && new Date(p.vencimento) < hoje)
