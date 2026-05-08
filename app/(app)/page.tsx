@@ -55,7 +55,7 @@ export default async function DashboardPage() {
         },
       },
       select: { id: true, nome: true, dataNascimento: true, turma: { select: { nome: true } } },
-    }).then((alunos) =>
+    }).then((alunos: { id: string; nome: string; dataNascimento: Date | null; turma: { nome: string } | null }[]) =>
       alunos.filter((a) => {
         if (!a.dataNascimento) return false
         const dn = new Date(a.dataNascimento)
