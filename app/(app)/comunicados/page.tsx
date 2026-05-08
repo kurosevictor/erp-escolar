@@ -60,7 +60,7 @@ export default async function ComunicadosPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {comunicados.map((c) => (
+          {comunicados.map((c: (typeof comunicados)[number]) => (
             <div key={c.id} className={`bg-card border rounded-xl p-5 ${c.fixado ? 'border-blue-300 dark:border-blue-700' : ''}`}>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
