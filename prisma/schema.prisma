@@ -42,9 +42,10 @@ model User {
   nome        String
   email       String    @unique
   role        UserRole  @default(SECRETARIA)
-  ativo       Boolean   @default(true)
-  avatarUrl   String?
-  lastLoginAt DateTime?
+  ativo          Boolean   @default(true)
+  avatarUrl      String?
+  assinaturaUrl  String?
+  lastLoginAt    DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
