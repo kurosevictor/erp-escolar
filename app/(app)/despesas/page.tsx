@@ -85,8 +85,8 @@ export default function DespesasPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome: novaDespesa.nome, valor, diaVencimento }),
     })
-    const criada = await res.json()
-    setDespesas(prev => [...prev, criada].sort((a, b) => a.diaVencimento - b.diaVencimento))
+    const criada: Despesa = await res.json()
+    setDespesas(prev => [...prev, criada].sort((a: Despesa, b: Despesa) => a.diaVencimento - b.diaVencimento))
     setNovaDespesa({ nome: '', valor: '', diaVencimento: '' })
     setNovaForm(false)
   }
