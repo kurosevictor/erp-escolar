@@ -1,7 +1,7 @@
 'use server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
-import { StatusPresenca } from '@prisma/client'
+type StatusPresenca = 'PRESENTE' | 'AUSENTE' | 'JUSTIFICADO' | 'ATESTADO'
 
 export type StatusFrequencia = 'OK' | 'ATENCAO' | 'CRITICO'
 
@@ -60,14 +60,14 @@ export async function getFrequenciaTurmaDetalhe(
     orderBy: { nome: 'asc' },
   })
 
-  const PRESENTES: StatusPresenca[] = [StatusPresenca.PRESENTE, StatusPresenca.JUSTIFICADO]
+  const PRESENTES: StatusPresenca[] = ['PRESENTE', 'JUSTIFICADO']
 
   const resultado: FrequenciaAluno[] = alunos.map((a) => {
     let presencas = 0
     let faltas = 0
     for (const ch of chamadas) {
       const p = ch.presencas.find((pr) => pr.alunoId === a.id)
-      if (!p || p.status === StatusPresenca.AUSENTE) {
+      if (!p || p.status === 'AUSENTE') {
         faltas++
       } else if (PRESENTES.includes(p.status)) {
         presencas++
@@ -97,7 +97,7 @@ export async function getFrequenciaGeral(mes: number, ano: number): Promise<Freq
     orderBy: { curso: 'asc' },
   })
 
-  const PRESENTES: StatusPresenca[] = [StatusPresenca.PRESENTE, StatusPresenca.JUSTIFICADO]
+  const PRESENTES: StatusPresenca[] = ['PRESENTE', 'JUSTIFICADO']
   const resultado: FrequenciaTurma[] = []
 
   for (const t of turmas) {
@@ -127,7 +127,7 @@ export async function getFrequenciaGeral(mes: number, ano: number): Promise<Freq
       let faltas = 0
       for (const ch of chamadas) {
         const p = ch.presencas.find((pr) => pr.alunoId === a.id)
-        if (!p || p.status === StatusPresenca.AUSENTE) faltas++
+        if (!p || p.status === 'AUSENTE') faltas++
         else if (PRESENTES.includes(p.status)) presencas++
       }
       const total = presencas + faltas
@@ -155,7 +155,7 @@ export async function getAlunosEmRiscoCount(mes: number, ano: number): Promise<n
 
   const inicio = new Date(ano, mes - 1, 1)
   const fim = new Date(ano, mes, 0, 23, 59, 59)
-  const PRESENTES: StatusPresenca[] = [StatusPresenca.PRESENTE, StatusPresenca.JUSTIFICADO]
+  const PRESENTES: StatusPresenca[] = ['PRESENTE', 'JUSTIFICADO']
 
   const turmas = await prisma.turma.findMany({
     where: { ativo: true },
@@ -174,7 +174,7 @@ export async function getAlunosEmRiscoCount(mes: number, ano: number): Promise<n
       let presencas = 0; let faltas = 0
       for (const ch of t.chamadas) {
         const p = ch.presencas.find((pr) => pr.alunoId === a.id)
-        if (!p || p.status === StatusPresenca.AUSENTE) faltas++
+        if (!p || p.status === 'AUSENTE') faltas++
         else if (PRESENTES.includes(p.status)) presencas++
       }
       const total = presencas + faltas

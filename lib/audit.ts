@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { AuditAction } from '@prisma/client'
+type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'RESTORE'
 import { headers } from 'next/headers'
 
 interface AuditParams {

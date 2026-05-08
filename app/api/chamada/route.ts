@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
-import { StatusPresenca } from '@prisma/client'
+type StatusPresenca = 'PRESENTE' | 'AUSENTE' | 'JUSTIFICADO' | 'ATESTADO'
 
 export async function GET() {
   const user = await requireAuth()
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       data: dataObj,
       autorId: autorId ?? user.id,
       presencas: {
-        create: turma.alunos.map(a => ({ alunoId: a.id, status: StatusPresenca.AUSENTE })),
+        create: turma.alunos.map(a => ({ alunoId: a.id, status: 'AUSENTE' as StatusPresenca })),
       },
     },
     include: { presencas: true },

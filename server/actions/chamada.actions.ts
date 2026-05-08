@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { audit } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
-import { StatusPresenca } from '@prisma/client'
+type StatusPresenca = 'PRESENTE' | 'AUSENTE' | 'JUSTIFICADO' | 'ATESTADO'
 
 export async function getOrCreateChamada(turmaId: string, data: Date) {
   const user = await requireAuth()
@@ -34,7 +34,7 @@ export async function getOrCreateChamada(turmaId: string, data: Date) {
       presencas: {
         create: turma.alunos.map((a) => ({
           alunoId: a.id,
-          status: StatusPresenca.AUSENTE,
+          status: 'AUSENTE',
         })),
       },
     },
@@ -95,7 +95,7 @@ export async function getFrequenciaAluno(alunoId: string) {
   })
 
   const total = presencas.length
-  const presentes = presencas.filter((p) => p.status === StatusPresenca.PRESENTE || p.status === StatusPresenca.JUSTIFICADO).length
+  const presentes = presencas.filter((p) => p.status === 'PRESENTE' || p.status === 'JUSTIFICADO').length
   const percentual = total > 0 ? Math.round((presentes / total) * 100) : 100
 
   return { presencas, total, presentes, percentual }

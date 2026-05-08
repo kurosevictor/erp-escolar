@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { AuditAction } from '@prisma/client'
+type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'RESTORE'
 
 interface AuditLogEntry {
   id: string

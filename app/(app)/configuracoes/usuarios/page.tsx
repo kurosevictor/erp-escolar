@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { UserRole } from '@prisma/client'
+type UserRole = 'ADMIN' | 'SECRETARIA' | 'FINANCEIRO' | 'PROFESSOR' | 'VISUALIZADOR'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import UsersClient from './users-client'

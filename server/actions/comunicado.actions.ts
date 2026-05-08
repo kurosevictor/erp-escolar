@@ -4,12 +4,12 @@ import { requireAuth, can } from '@/lib/auth'
 import { audit } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { DestinatarioComunicado } from '@prisma/client'
+type DestinatarioComunicado = 'TODOS' | 'TURMA' | 'RESPONSAVEIS' | 'PROFESSORES' | 'STAFF'
 
 const comunicadoSchema = z.object({
   titulo: z.string().min(1).max(200),
   corpo: z.string().min(1),
-  destinatario: z.nativeEnum(DestinatarioComunicado),
+  destinatario: z.enum(['TODOS', 'TURMA', 'RESPONSAVEIS', 'PROFESSORES', 'STAFF']),
   turmaId: z.string().optional().nullable(),
   fixado: z.boolean().default(false),
 })

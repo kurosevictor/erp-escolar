@@ -3,14 +3,16 @@ import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { audit } from '@/lib/audit'
-import { UserRole } from '@prisma/client'
 import { z } from 'zod'
+
+const USER_ROLES = ['ADMIN', 'SECRETARIA', 'FINANCEIRO', 'PROFESSOR', 'VISUALIZADOR'] as const
+type UserRole = typeof USER_ROLES[number]
 
 const inviteSchema = z.object({
   nome: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(8),
-  role: z.nativeEnum(UserRole),
+  role: z.enum(USER_ROLES),
 })
 
 export async function inviteUser(formData: FormData) {
