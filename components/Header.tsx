@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Users, LogOut, Shield, Search } from 'lucide-react'
-import { UserRole } from '@prisma/client'
+type UserRole = 'ADMIN' | 'SECRETARIA' | 'FINANCEIRO' | 'PROFESSOR' | 'VISUALIZADOR'
 import { signOut } from '@/app/(auth)/login/actions'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
 import { NotificationBell } from '@/components/shared/notification-bell'

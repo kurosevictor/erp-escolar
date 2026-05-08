@@ -6,7 +6,7 @@ import {
   CalendarCheck, FileText, Package, Cake, UserCog, ClipboardList,
   Receipt, UserCheck, MessageSquare, BookOpen, TrendingUp, School,
 } from 'lucide-react'
-import { UserRole } from '@prisma/client'
+type UserRole = 'ADMIN' | 'SECRETARIA' | 'FINANCEIRO' | 'PROFESSOR' | 'VISUALIZADOR'
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },

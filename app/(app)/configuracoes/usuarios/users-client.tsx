@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { UserRole } from '@prisma/client'
+type UserRole = 'ADMIN' | 'SECRETARIA' | 'FINANCEIRO' | 'PROFESSOR' | 'VISUALIZADOR'
 import { UserPlus, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import { inviteUser, toggleUserActive, changeUserRole } from './actions'
 

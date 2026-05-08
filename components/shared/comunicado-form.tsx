@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { notify } from '@/lib/toast'
 import { criarComunicado, atualizarComunicado } from '@/server/actions/comunicado.actions'
-import { DestinatarioComunicado } from '@prisma/client'
+type DestinatarioComunicado = 'TODOS' | 'TURMA' | 'RESPONSAVEIS' | 'PROFESSORES' | 'STAFF'
 
 const DESTINATARIOS = [
   { value: 'TODOS', label: 'Todos' },

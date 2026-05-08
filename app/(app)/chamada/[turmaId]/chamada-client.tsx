@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { CheckCircle2, XCircle, AlertCircle, ArrowLeft, Save, Lock, Unlock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { notify } from '@/lib/toast'
-import { StatusPresenca } from '@prisma/client'
+type StatusPresenca = 'PRESENTE' | 'AUSENTE' | 'JUSTIFICADO' | 'ATESTADO'
 
 interface Aluno { id: string; nome: string; foto: string | null }
 interface Turma { id: string; nome: string; curso: string; turno: string; alunos: Aluno[] }
@@ -32,7 +32,7 @@ export function ChamadaClient({ turma, chamadaExistente, userId, userRole, hoje 
   const [fechada, setFechada] = useState(chamadaExistente?.fechada ?? false)
   const [presencas, setPresencas] = useState<Record<string, StatusPresenca>>(() => {
     const map: Record<string, StatusPresenca> = {}
-    turma.alunos.forEach(a => { map[a.id] = StatusPresenca.AUSENTE })
+    turma.alunos.forEach(a => { map[a.id] = 'AUSENTE' })
     chamadaExistente?.presencas.forEach(p => { map[p.alunoId] = p.status })
     return map
   })
