@@ -37,9 +37,9 @@ export default async function AuditoriaPage({
 
   const entities = await prisma.auditLog
     .findMany({ select: { entity: true }, distinct: ['entity'] })
-    .then((r) => r.map((e) => e.entity))
+    .then((r: { entity: string }[]) => r.map((e) => e.entity))
 
-  const serialized = logs.map((l) => ({
+  const serialized = logs.map((l: (typeof logs)[number]) => ({
     ...l,
     createdAt: l.createdAt.toISOString(),
     before: l.before as Record<string, unknown> | null,

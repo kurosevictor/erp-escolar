@@ -20,7 +20,7 @@ export default async function UsuariosPage() {
     orderBy: { createdAt: 'desc' },
   })
 
-  const serialized = users.map((u) => ({
+  const serialized = users.map((u: (typeof users)[number]) => ({
     ...u,
     lastLoginAt: u.lastLoginAt ? u.lastLoginAt.toISOString() : null,
     createdAt: u.createdAt.toISOString(),
