@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import Groq from 'groq-sdk'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { SYSTEM_PROMPT } from '@/lib/chat/schema-context'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+
+const MODEL = 'llama-3.3-70b-versatile'
 
 function isSafeQuery(sql: string): boolean {
   const upper = sql.trim().toUpperCase()
@@ -31,21 +33,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Pergunta inválida' }, { status: 400 })
   }
 
-  const messages: Anthropic.MessageParam[] = [
-    ...historico.map(m => ({ role: m.role, content: m.content })),
+  const messages: Groq.Chat.ChatCompletionMessageParam[] = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    ...historico.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     { role: 'user', content: pergunta },
   ]
 
-  const sqlResponse = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+  const sqlResponse = await groq.chat.completions.create({
+    model: MODEL,
     max_tokens: 500,
-    system: SYSTEM_PROMPT,
     messages,
   })
 
-  const sql = sqlResponse.content[0].type === 'text'
-    ? sqlResponse.content[0].text.trim()
-    : ''
+  const sql = sqlResponse.choices[0]?.message?.content?.trim() ?? ''
 
   if (sql === 'FORA_DO_ESCOPO') {
     return NextResponse.json({
@@ -75,24 +75,27 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  const formatResponse = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+  const formatResponse = await groq.chat.completions.create({
+    model: MODEL,
     max_tokens: 300,
-    system:
-      'Você é um assistente de uma escola profissionalizante chamada Futura. ' +
-      'Responda em português brasileiro de forma direta e concisa, ' +
-      'como se estivesse conversando com a secretaria da escola. ' +
-      'Não mencione SQL nem banco de dados. ' +
-      'Se os dados estiverem vazios, diga que não encontrou resultados.',
-    messages: [{
-      role: 'user',
-      content: `Pergunta: "${pergunta}"\n\nDados: ${JSON.stringify(dados)}\n\nResponda a pergunta com base nos dados.`,
-    }],
+    messages: [
+      {
+        role: 'system',
+        content:
+          'Você é um assistente de uma escola profissionalizante chamada Futura. ' +
+          'Responda em português brasileiro de forma direta e concisa, ' +
+          'como se estivesse conversando com a secretaria da escola. ' +
+          'Não mencione SQL nem banco de dados. ' +
+          'Se os dados estiverem vazios, diga que não encontrou resultados.',
+      },
+      {
+        role: 'user',
+        content: `Pergunta: "${pergunta}"\n\nDados: ${JSON.stringify(dados)}\n\nResponda a pergunta com base nos dados.`,
+      },
+    ],
   })
 
-  const resposta = formatResponse.content[0].type === 'text'
-    ? formatResponse.content[0].text
-    : 'Não consegui formatar a resposta.'
+  const resposta = formatResponse.choices[0]?.message?.content ?? 'Não consegui formatar a resposta.'
 
   return NextResponse.json({ resposta, sql, dados })
 }
