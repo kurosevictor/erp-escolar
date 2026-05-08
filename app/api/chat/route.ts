@@ -45,7 +45,12 @@ export async function POST(req: NextRequest) {
     messages,
   })
 
-  const sql = sqlResponse.choices[0]?.message?.content?.trim() ?? ''
+  const raw = sqlResponse.choices[0]?.message?.content?.trim() ?? ''
+  // Remove markdown code blocks que o Llama costuma adicionar
+  const sql = raw
+    .replace(/^```(?:sql)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim()
 
   if (sql === 'FORA_DO_ESCOPO') {
     return NextResponse.json({
