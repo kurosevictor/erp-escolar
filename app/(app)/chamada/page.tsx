@@ -29,7 +29,7 @@ export default async function ChamadaPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {turmas.map((turma) => {
+        {turmas.map((turma: (typeof turmas)[number]) => {
           const chamadaHoje = turma.chamadas[0]
           const feita = !!chamadaHoje
           const fechada = chamadaHoje?.fechada ?? false
