@@ -144,7 +144,7 @@ export default async function DashboardPage() {
 
       {/* Cards de alerta */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map((card) => {
+        {cards.map((card: (typeof cards)[number]) => {
           const Icon = card.icon
           return (
             <Link key={card.label} href={card.href} className={`rounded-xl border p-5 flex items-center gap-4 hover:shadow-sm transition-all ${card.bg}`}>
@@ -203,7 +203,7 @@ export default async function DashboardPage() {
             <Link href="/vagas" className="text-xs text-primary hover:underline">Ver todas →</Link>
           </div>
           <div className="space-y-3">
-            {top3Lotadas.map((t) => (
+            {top3Lotadas.map((t: (typeof top3Lotadas)[number]) => (
               <div key={t.id} className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{t.curso}</p>
@@ -245,7 +245,7 @@ export default async function DashboardPage() {
       <div className="bg-card rounded-xl border p-5">
         <h2 className="font-semibold text-foreground mb-4">Últimas Matrículas</h2>
         <div className="space-y-3">
-          {ultimosAlunos.map((a) => (
+          {ultimosAlunos.map((a: (typeof ultimosAlunos)[number]) => (
             <Link key={a.id} href={`/alunos/${a.id}`} className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent transition-colors">
               <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
                 {a.foto
