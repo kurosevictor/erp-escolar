@@ -22,7 +22,7 @@ export async function notifyRole(
     })
     if (users.length === 0) return
     await prisma.notificacao.createMany({
-      data: users.map((u) => ({ userId: u.id, ...data })),
+      data: users.map((u: { id: string }) => ({ userId: u.id, ...data })),
     })
   } catch (err) {
     console.error('[Notificacao] Erro notifyRole:', err)
