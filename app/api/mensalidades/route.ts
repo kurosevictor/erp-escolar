@@ -48,13 +48,13 @@ export async function POST(request: NextRequest) {
     .lte('vencimento', fim)
 
   const idsExistentes = new Set((existentes || []).map((e: any) => e.alunoId))
-  const novos = alunos.filter(a => !idsExistentes.has(a.id))
+  const novos = alunos.filter((a: { id: string }) => !idsExistentes.has(a.id))
 
   if (novos.length === 0) {
     return NextResponse.json({ criadas: 0, mensagem: 'Todos os alunos já têm mensalidade nesse mês.' })
   }
 
-  const inserts = novos.map(a => ({
+  const inserts = novos.map((a: { id: string }) => ({
     alunoId: a.id,
     vencimento,
     pago: false,

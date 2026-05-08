@@ -62,8 +62,8 @@ export async function getKPIsFinanceiro(mes: number, ano: number): Promise<KPIsF
     },
   })
 
-  const receitaRealizada = pagas.reduce((s, p) => s + p.valor, 0)
-  const receitaEsperada = todas.reduce((s, p) => s + p.valor, 0)
+  const receitaRealizada = pagas.reduce((s: number, p: { valor: number }) => s + p.valor, 0)
+  const receitaEsperada = todas.reduce((s: number, p: { valor: number }) => s + p.valor, 0)
   const taxaInadimplencia = totalAtivos > 0 ? Math.round((inadimplentesCount / totalAtivos) * 100) : 0
   const ticketMedio = pagadores.length > 0 ? receitaRealizada / pagadores.length : 0
 
@@ -140,8 +140,8 @@ export async function getInadimplenciaFaixas(): Promise<InadimplenciaFaixa[]> {
       select: { valor: true, alunoId: true },
     })
 
-    const alunosUnicos = new Set(parcelas.map((p) => p.alunoId)).size
-    const valorEmAberto = parcelas.reduce((s, p) => s + p.valor, 0)
+    const alunosUnicos = new Set(parcelas.map((p: { valor: number; alunoId: string }) => p.alunoId)).size
+    const valorEmAberto = parcelas.reduce((s: number, p: { valor: number; alunoId: string }) => s + p.valor, 0)
 
     resultado.push({ ...f, alunos: alunosUnicos, valorEmAberto })
   }

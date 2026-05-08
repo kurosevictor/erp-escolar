@@ -47,7 +47,7 @@ export async function getVagasDashboard(): Promise<VagasTurma[]> {
     orderBy: { curso: 'asc' },
   })
 
-  return turmas.map((t) => {
+  return turmas.map((t: (typeof turmas)[number]) => {
     const cap = t.capacidade ?? 10
     const ativos = t._count.alunos
     const livres = cap - ativos

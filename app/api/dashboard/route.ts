@@ -35,7 +35,7 @@ export async function GET() {
       select: { id: true },
     })
 
-    const porCurso = turmasRaw.map((t) => ({
+    const porCurso = turmasRaw.map((t: (typeof turmasRaw)[number]) => ({
       curso: t.curso,
       total: t._count.alunos,
     }))

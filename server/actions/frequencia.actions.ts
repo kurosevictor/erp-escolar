@@ -62,11 +62,11 @@ export async function getFrequenciaTurmaDetalhe(
 
   const PRESENTES: StatusPresenca[] = ['PRESENTE', 'JUSTIFICADO']
 
-  const resultado: FrequenciaAluno[] = alunos.map((a) => {
+  const resultado: FrequenciaAluno[] = alunos.map((a: (typeof alunos)[number]) => {
     let presencas = 0
     let faltas = 0
     for (const ch of chamadas) {
-      const p = ch.presencas.find((pr) => pr.alunoId === a.id)
+      const p = ch.presencas.find((pr: (typeof ch.presencas)[number]) => pr.alunoId === a.id)
       if (!p || p.status === 'AUSENTE') {
         faltas++
       } else if (PRESENTES.includes(p.status)) {
@@ -126,7 +126,7 @@ export async function getFrequenciaGeral(mes: number, ano: number): Promise<Freq
       let presencas = 0
       let faltas = 0
       for (const ch of chamadas) {
-        const p = ch.presencas.find((pr) => pr.alunoId === a.id)
+        const p = ch.presencas.find((pr: (typeof ch.presencas)[number]) => pr.alunoId === a.id)
         if (!p || p.status === 'AUSENTE') faltas++
         else if (PRESENTES.includes(p.status)) presencas++
       }
@@ -173,7 +173,7 @@ export async function getAlunosEmRiscoCount(mes: number, ano: number): Promise<n
     for (const a of t.alunos) {
       let presencas = 0; let faltas = 0
       for (const ch of t.chamadas) {
-        const p = ch.presencas.find((pr) => pr.alunoId === a.id)
+        const p = ch.presencas.find((pr: (typeof ch.presencas)[number]) => pr.alunoId === a.id)
         if (!p || p.status === 'AUSENTE') faltas++
         else if (PRESENTES.includes(p.status)) presencas++
       }

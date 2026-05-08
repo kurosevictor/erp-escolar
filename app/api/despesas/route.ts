@@ -38,7 +38,7 @@ export async function GET() {
       prisma.parcela.findMany({ where: { pago: true }, select: { valor: true } }),
     ])
 
-    const totalMensalidadesPagas = parcelasPagas.reduce((sum, p) => sum + p.valor, 0)
+    const totalMensalidadesPagas = parcelasPagas.reduce((sum: number, p: { valor: number }) => sum + p.valor, 0)
 
     return NextResponse.json({ despesas, totalMensalidadesPagas })
   } catch (e) {

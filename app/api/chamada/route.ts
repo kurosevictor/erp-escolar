@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       data: dataObj,
       autorId: autorId ?? user.id,
       presencas: {
-        create: turma.alunos.map(a => ({ alunoId: a.id, status: 'AUSENTE' as StatusPresenca })),
+        create: turma.alunos.map((a: (typeof turma.alunos)[number]) => ({ alunoId: a.id, status: 'AUSENTE' as StatusPresenca })),
       },
     },
     include: { presencas: true },

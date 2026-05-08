@@ -32,7 +32,7 @@ export async function getOrCreateChamada(turmaId: string, data: Date) {
       data: dataInicio,
       autorId: user.id,
       presencas: {
-        create: turma.alunos.map((a) => ({
+        create: turma.alunos.map((a: (typeof turma.alunos)[number]) => ({
           alunoId: a.id,
           status: 'AUSENTE',
         })),
@@ -95,7 +95,7 @@ export async function getFrequenciaAluno(alunoId: string) {
   })
 
   const total = presencas.length
-  const presentes = presencas.filter((p) => p.status === 'PRESENTE' || p.status === 'JUSTIFICADO').length
+  const presentes = presencas.filter((p: (typeof presencas)[number]) => p.status === 'PRESENTE' || p.status === 'JUSTIFICADO').length
   const percentual = total > 0 ? Math.round((presentes / total) * 100) : 100
 
   return { presencas, total, presentes, percentual }
