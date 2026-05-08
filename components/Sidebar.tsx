@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, DollarSign, Settings, GraduationCap,
   CalendarCheck, FileText, Package, Cake, UserCog, ClipboardList,
   Receipt, UserCheck, MessageSquare, BookOpen, TrendingUp, School,
-  ScrollText,
+  ScrollText, Bot,
 } from 'lucide-react'
 type UserRole = 'ADMIN' | 'SECRETARIA' | 'FINANCEIRO' | 'PROFESSOR' | 'VISUALIZADOR'
 
@@ -17,6 +17,7 @@ const navItems = [
   { href: '/despesas', label: 'Despesas', icon: Receipt },
   { href: '/chamada', label: 'Chamada', icon: UserCheck },
   { href: '/frequencia', label: 'Frequência', icon: BookOpen },
+  { href: '/chat', label: 'Assistente IA', icon: Bot },
   { href: '/vagas', label: 'Vagas', icon: School },
   { href: '/financeiro/dashboard', label: 'Financeiro Dashboard', icon: TrendingUp },
   { href: '/nota-fiscal', label: 'Nota Fiscal', icon: FileText },
