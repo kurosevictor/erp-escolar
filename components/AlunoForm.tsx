@@ -133,11 +133,18 @@ export default function AlunoForm({ initialData, mode }: AlunoFormProps) {
         const created = await res.json()
         alunoId = created.id
       } else {
-        await fetch(`/api/alunos/${alunoId}`, {
+        const res = await fetch(`/api/alunos/${alunoId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          console.error('Erro ao salvar aluno:', err)
+          alert('Erro ao salvar: ' + (JSON.stringify(err.error) ?? 'verifique o console'))
+          setLoading(false)
+          return
+        }
       }
 
       if (fotoFile && alunoId) {
