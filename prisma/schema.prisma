@@ -91,7 +91,8 @@ model Turma {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  alunos      Aluno[]
+  alunos      Aluno[]  @relation("TurmaPrincipal")
+  alunos2     Aluno[]  @relation("TurmaSecundaria")
   chamadas    Chamada[]
   materiais   Material[]
   comunicados Comunicado[]
@@ -120,8 +121,10 @@ model Aluno {
   updatedAt          DateTime  @updatedAt
   deletedAt          DateTime?
 
-  turmaId String
-  turma   Turma  @relation(fields: [turmaId], references: [id])
+  turmaId  String
+  turma    Turma   @relation("TurmaPrincipal", fields: [turmaId], references: [id])
+  turmaId2 String?
+  turma2   Turma?  @relation("TurmaSecundaria", fields: [turmaId2], references: [id])
 
   pagamentos  Parcela[]
   presencas   Presenca[]
@@ -130,6 +133,7 @@ model Aluno {
   @@index([nome])
   @@index([deletedAt])
   @@index([turmaId])
+  @@index([turmaId2])
 }
 
 model Parcela {

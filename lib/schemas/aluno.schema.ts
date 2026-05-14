@@ -20,6 +20,7 @@ export const createAlunoSchema = z.object({
   email: z.string().email('Email inválido').optional().nullable(),
   telefone: telefoneSchema,
   turmaId: z.string().min(1, 'Turma obrigatória'),
+  turmaId2: z.string().nullable().optional(),
   situacaoMatricula: z.string().optional().default('ATIVO'),
   dataMatricula: z.coerce.date().optional().nullable(),
   observacoes: z.string().optional().nullable(),

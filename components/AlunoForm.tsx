@@ -28,6 +28,7 @@ interface AlunoFormProps {
     situacaoMatricula?: string
     observacoes?: string
     turmaId?: string
+    turmaId2?: string | null
   }
   mode: 'novo' | 'editar'
 }
@@ -66,6 +67,7 @@ export default function AlunoForm({ initialData, mode }: AlunoFormProps) {
     situacaoMatricula: initialData?.situacaoMatricula || 'ATIVO',
     observacoes: initialData?.observacoes || '',
     turmaId: initialData?.turmaId || '',
+    turmaId2: initialData?.turmaId2 || '',
   })
 
   useEffect(() => {
@@ -120,6 +122,7 @@ export default function AlunoForm({ initialData, mode }: AlunoFormProps) {
         cpf: form.cpf.replace(/\D/g, ''),
         telefone: form.telefone.replace(/\D/g, '') || null,
         dataNascimento: form.dataNascimento || null,
+        turmaId2: form.turmaId2 || null,
       }
 
       let alunoId = initialData?.id
@@ -265,6 +268,19 @@ export default function AlunoForm({ initialData, mode }: AlunoFormProps) {
                   Curso: {turmaSelecionada.curso}
                 </p>
               )}
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Segunda Turma <span className="text-gray-400 font-normal">(opcional)</span></label>
+              <select value={form.turmaId2}
+                onChange={e => setForm(f => ({ ...f, turmaId2: e.target.value }))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Nenhuma</option>
+                {turmas.filter(t => t.id !== form.turmaId).map(t => (
+                  <option key={t.id} value={t.id}>
+                    {t.nome} — {t.turno} · {t.horario}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Data de Matrícula *</label>
