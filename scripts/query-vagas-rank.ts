@@ -17,27 +17,18 @@ async function main() {
     LEFT JOIN "Aluno" a2 ON a2."turmaId2" = t.id
     WHERE t.ativo = true
     GROUP BY t.curso, t.horario, t.capacidade
-    ORDER BY t.horario ASC, t.curso ASC
   `
 
-  const ordemDias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sábado']
-  const porDia = new Map<string, typeof rows>()
-  for (const r of rows) {
-    const dia = r.horario.split(' ')[0]
-    if (!porDia.has(dia)) porDia.set(dia, [])
-    porDia.get(dia)!.push(r)
-  }
+  const ranked = rows
+    .map(r => ({
+      curso: r.curso,
+      horario: r.horario,
+      vagas: (r.capacidade ?? 10) - r.alunos,
+    }))
+    .sort((a, b) => a.vagas - b.vagas)
 
-  for (const dia of ordemDias) {
-    const turmas = porDia.get(dia)
-    if (!turmas) continue
-    console.log(`\n── ${dia} ──`)
-    for (const t of turmas) {
-      const cap = t.capacidade ?? '?'
-      const livres = t.capacidade != null ? t.capacidade - t.alunos : '?'
-      const hora = t.horario.replace(dia + ' ', '')
-      console.log(`  ${hora} | ${t.curso} — ${t.alunos}/${cap} alunos | 🟢 ${livres} vagas livres`)
-    }
+  for (const r of ranked) {
+    console.log(`${r.vagas} vaga${r.vagas !== 1 ? 's' : ''} — ${r.curso} (${r.horario})`)
   }
 }
 
