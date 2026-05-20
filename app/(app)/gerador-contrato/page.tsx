@@ -48,7 +48,7 @@ export default function GeradorContratoPage() {
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     // Aluno
-    nomeAluno: '', cpfAluno: '', nascAluno: '',
+    nomeAluno: '', cpfAluno: '', nascAluno: '', celularAluno: '', emailAluno: '',
     // Responsável legal (menores)
     nomeResponsavelLegal: '', grauParentescoLegal: '', cpfResponsavelLegal: '',
     nascResponsavelLegal: '', enderecoResponsavel: '', bairroResponsavel: '',
@@ -86,9 +86,11 @@ export default function GeradorContratoPage() {
         cpfResponsavelLegal: f.cpfAluno,
         nascResponsavelLegal: f.nascAluno,
         grauParentescoLegal: 'MESMO',
+        celularResponsavel: f.celularAluno,
+        emailResponsavel: f.emailAluno,
       }))
     }
-  }, [menor, form.nomeAluno, form.cpfAluno, form.nascAluno])
+  }, [menor, form.nomeAluno, form.cpfAluno, form.nascAluno, form.celularAluno, form.emailAluno])
 
   async function handleGerar() {
     if (!form.nomeAluno || !form.curso) {
@@ -148,6 +150,12 @@ export default function GeradorContratoPage() {
         </Field>
         <Field label="Data de nascimento">
           <input className={inputCls} type="date" value={form.nascAluno} onChange={e => set('nascAluno', e.target.value)} />
+        </Field>
+        <Field label="Telefone / Celular">
+          <input className={inputCls} value={form.celularAluno} onChange={e => set('celularAluno', e.target.value)} placeholder="(47) 9 9999-9999" />
+        </Field>
+        <Field label="E-mail">
+          <input className={inputCls} type="email" value={form.emailAluno} onChange={e => set('emailAluno', e.target.value)} placeholder="email@exemplo.com" />
         </Field>
         {form.nascAluno && (
           <div className="flex items-center">

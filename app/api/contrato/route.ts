@@ -52,6 +52,8 @@ export async function POST(req: NextRequest) {
       cpfAluno: body.cpfAluno || '',
       nascAluno: formatarData(body.nascAluno),
       cpfAlunoAss: body.cpfAluno || '',
+      celularAluno: body.celularAluno || '',
+      emailAluno: body.emailAluno || '',
 
       // Responsável legal (menores)
       nomeResponsavelLegal: body.nomeResponsavelLegal || '',
