@@ -77,6 +77,19 @@ export default function GeradorContratoPage() {
     }
   }, [form.valorParcelaSemDesconto])
 
+  // Quando maior de idade: repete dados do aluno nos campos de responsável
+  useEffect(() => {
+    if (!menor) {
+      setForm(f => ({
+        ...f,
+        nomeResponsavelLegal: f.nomeAluno,
+        cpfResponsavelLegal: f.cpfAluno,
+        nascResponsavelLegal: f.nascAluno,
+        grauParentescoLegal: 'MESMO',
+      }))
+    }
+  }, [menor, form.nomeAluno, form.cpfAluno, form.nascAluno])
+
   async function handleGerar() {
     if (!form.nomeAluno || !form.curso) {
       alert('Preencha ao menos o nome do aluno e o curso.')
