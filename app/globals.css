@@ -133,6 +133,13 @@ body {
   }
 }
 
+/* Modo Visualização — desabilita todos os botões exceto em /gerador-contrato (tratado via data-readonly no wrapper) */
+[data-readonly="true"] button {
+  pointer-events: none !important;
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
 @media print {
   nav, aside, header, .no-print, button, [data-sidebar] {
     display: none !important;
