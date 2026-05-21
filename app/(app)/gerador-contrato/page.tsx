@@ -49,6 +49,8 @@ export default function GeradorContratoPage() {
   const [form, setForm] = useState({
     // Aluno
     nomeAluno: '', cpfAluno: '', nascAluno: '',
+    enderecoAluno: '', bairroAluno: '', municipioAluno: '',
+    celularAluno: '', emailAluno: '',
     // Responsável legal (menores)
     nomeResponsavelLegal: '', grauParentescoLegal: '', cpfResponsavelLegal: '',
     nascResponsavelLegal: '', enderecoResponsavel: '', bairroResponsavel: '',
@@ -143,6 +145,21 @@ export default function GeradorContratoPage() {
             </span>
           </div>
         )}
+        <Field label="Telefone / Celular">
+          <input className={inputCls} value={form.celularAluno} onChange={e => set('celularAluno', e.target.value)} placeholder="(47) 9 9999-9999" />
+        </Field>
+        <Field label="E-mail">
+          <input className={inputCls} type="email" value={form.emailAluno} onChange={e => set('emailAluno', e.target.value)} placeholder="email@exemplo.com" />
+        </Field>
+        <Field label="Endereço residencial">
+          <input className={inputCls} value={form.enderecoAluno} onChange={e => set('enderecoAluno', e.target.value)} placeholder="Rua, número" />
+        </Field>
+        <Field label="Bairro">
+          <input className={inputCls} value={form.bairroAluno} onChange={e => set('bairroAluno', e.target.value)} />
+        </Field>
+        <Field label="Município">
+          <input className={inputCls} value={form.municipioAluno} onChange={e => set('municipioAluno', e.target.value)} placeholder="Jaraguá do Sul" />
+        </Field>
       </Section>
 
       {/* RESPONSÁVEL LEGAL (só menores) */}

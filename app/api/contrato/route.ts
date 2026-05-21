@@ -53,16 +53,16 @@ export async function POST(req: NextRequest) {
       nascAluno: formatarData(body.nascAluno),
       cpfAlunoAss: body.cpfAluno || '',
 
-      // Responsável legal (menores)
+      // Responsável legal (menores) — fallback para dados do aluno quando maior de idade
       nomeResponsavelLegal: body.nomeResponsavelLegal || '',
       grauParentescoLegal: body.grauParentescoLegal || '',
       cpfResponsavelLegal: body.cpfResponsavelLegal || '',
       nascResponsavelLegal: formatarData(body.nascResponsavelLegal),
-      enderecoResponsavel: body.enderecoResponsavel || '',
-      bairroResponsavel: body.bairroResponsavel || '',
-      municipioResponsavel: body.municipioResponsavel || '',
-      celularResponsavel: body.celularResponsavel || '',
-      emailResponsavel: body.emailResponsavel || '',
+      enderecoResponsavel: body.enderecoResponsavel || body.enderecoAluno || '',
+      bairroResponsavel: body.bairroResponsavel || body.bairroAluno || '',
+      municipioResponsavel: body.municipioResponsavel || body.municipioAluno || '',
+      celularResponsavel: body.celularResponsavel || body.celularAluno || '',
+      emailResponsavel: body.emailResponsavel || body.emailAluno || '',
       nomeResponsavelFinanceiro: body.nomeResponsavelLegal || body.nomeAluno || '',
       cpfResponsavelAss: body.cpfResponsavelLegal || body.cpfAluno || '',
 
