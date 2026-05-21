@@ -45,6 +45,7 @@ export async function PUT(
       observacoes: data.observacoes ?? null,
       turmaId: data.turmaId,
       turmaId2: data.turmaId2 ?? null,
+      turmaId3: data.turmaId3 ?? null,
     },
     include: { turma: true, pagamentos: { orderBy: { numero: 'asc' } } },
   })

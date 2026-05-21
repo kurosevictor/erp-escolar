@@ -40,6 +40,7 @@ export async function getVagasDashboard(): Promise<VagasTurma[]> {
         select: {
           alunos: { where: { situacaoMatricula: 'ATIVO' } },
           alunos2: { where: { situacaoMatricula: 'ATIVO' } },
+          alunos3: { where: { situacaoMatricula: 'ATIVO' } },
         },
       },
     },
@@ -48,7 +49,7 @@ export async function getVagasDashboard(): Promise<VagasTurma[]> {
 
   return turmas.map((t: (typeof turmas)[number]) => {
     const cap = t.capacidade ?? 10
-    const ativos = t._count.alunos + t._count.alunos2
+    const ativos = t._count.alunos + t._count.alunos2 + t._count.alunos3
     const livres = cap - ativos
     return {
       id: t.id,

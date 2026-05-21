@@ -93,6 +93,7 @@ model Turma {
 
   alunos      Aluno[]  @relation("TurmaPrincipal")
   alunos2     Aluno[]  @relation("TurmaSecundaria")
+  alunos3     Aluno[]  @relation("TurmaTerciaria")
   chamadas    Chamada[]
   materiais   Material[]
   comunicados Comunicado[]
@@ -125,6 +126,8 @@ model Aluno {
   turma    Turma   @relation("TurmaPrincipal", fields: [turmaId], references: [id])
   turmaId2 String?
   turma2   Turma?  @relation("TurmaSecundaria", fields: [turmaId2], references: [id])
+  turmaId3 String?
+  turma3   Turma?  @relation("TurmaTerciaria", fields: [turmaId3], references: [id])
 
   pagamentos  Parcela[]
   presencas   Presenca[]
@@ -134,6 +137,7 @@ model Aluno {
   @@index([deletedAt])
   @@index([turmaId])
   @@index([turmaId2])
+  @@index([turmaId3])
 }
 
 model Parcela {
