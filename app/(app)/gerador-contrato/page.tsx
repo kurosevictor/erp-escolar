@@ -13,7 +13,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
   )
 }
 
-const inputCls = 'rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+const inputCls = 'rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500'
 
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
@@ -49,8 +49,8 @@ export default function GeradorContratoPage() {
   const [form, setForm] = useState({
     // Aluno
     nomeAluno: '', cpfAluno: '', nascAluno: '',
-    enderecoAluno: '', bairroAluno: '', municipioAluno: '',
     celularAluno: '', emailAluno: '',
+    enderecoAluno: '', bairroAluno: '', municipioAluno: '',
     // Responsável legal (menores)
     nomeResponsavelLegal: '', grauParentescoLegal: '', cpfResponsavelLegal: '',
     nascResponsavelLegal: '', enderecoResponsavel: '', bairroResponsavel: '',
@@ -78,6 +78,24 @@ export default function GeradorContratoPage() {
       set('valorParcelaComDesconto', (sem - 50).toFixed(2))
     }
   }, [form.valorParcelaSemDesconto])
+
+  // Quando maior de idade: repete dados do aluno nos campos de responsável
+  useEffect(() => {
+    if (!menor) {
+      setForm(f => ({
+        ...f,
+        nomeResponsavelLegal: f.nomeAluno,
+        cpfResponsavelLegal: f.cpfAluno,
+        nascResponsavelLegal: f.nascAluno,
+        grauParentescoLegal: 'MESMO',
+        celularResponsavel: f.celularAluno,
+        emailResponsavel: f.emailAluno,
+        enderecoResponsavel: f.enderecoAluno,
+        bairroResponsavel: f.bairroAluno,
+        municipioResponsavel: f.municipioAluno,
+      }))
+    }
+  }, [menor, form.nomeAluno, form.cpfAluno, form.nascAluno, form.celularAluno, form.emailAluno, form.enderecoAluno, form.bairroAluno, form.municipioAluno])
 
   async function handleGerar() {
     if (!form.nomeAluno || !form.curso) {
@@ -138,13 +156,6 @@ export default function GeradorContratoPage() {
         <Field label="Data de nascimento">
           <input className={inputCls} type="date" value={form.nascAluno} onChange={e => set('nascAluno', e.target.value)} />
         </Field>
-        {form.nascAluno && (
-          <div className="flex items-center">
-            <span className={`text-sm px-3 py-1 rounded-full font-medium ${menor ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
-              {menor ? `⚠️ Menor de idade (${calcIdade(form.nascAluno)} anos) — responsável obrigatório` : `✓ Maior de idade (${calcIdade(form.nascAluno)} anos)`}
-            </span>
-          </div>
-        )}
         <Field label="Telefone / Celular">
           <input className={inputCls} value={form.celularAluno} onChange={e => set('celularAluno', e.target.value)} placeholder="(47) 9 9999-9999" />
         </Field>
@@ -160,6 +171,13 @@ export default function GeradorContratoPage() {
         <Field label="Município">
           <input className={inputCls} value={form.municipioAluno} onChange={e => set('municipioAluno', e.target.value)} placeholder="Jaraguá do Sul" />
         </Field>
+        {form.nascAluno && (
+          <div className="md:col-span-2 flex items-center">
+            <span className={`text-sm px-3 py-1 rounded-full font-medium ${menor ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+              {menor ? `⚠️ Menor de idade (${calcIdade(form.nascAluno)} anos) — responsável obrigatório` : `✓ Maior de idade (${calcIdade(form.nascAluno)} anos)`}
+            </span>
+          </div>
+        )}
       </Section>
 
       {/* RESPONSÁVEL LEGAL (só menores) */}
@@ -189,7 +207,7 @@ export default function GeradorContratoPage() {
           <Field label="Telefone / Celular">
             <input className={inputCls} value={form.celularResponsavel} onChange={e => set('celularResponsavel', e.target.value)} placeholder="(47) 9 9999-9999" />
           </Field>
-          <Field label="E-mail" >
+          <Field label="E-mail">
             <input className={inputCls} type="email" value={form.emailResponsavel} onChange={e => set('emailResponsavel', e.target.value)} placeholder="email@exemplo.com" />
           </Field>
         </Section>

@@ -52,6 +52,8 @@ export async function POST(req: NextRequest) {
       cpfAluno: body.cpfAluno || '',
       nascAluno: formatarData(body.nascAluno),
       cpfAlunoAss: body.cpfAluno || '',
+      celularAluno: body.celularAluno || '',
+      emailAluno: body.emailAluno || '',
 
       // Responsável legal (menores) — fallback para dados do aluno quando maior de idade
       nomeResponsavelLegal: body.nomeResponsavelLegal || '',

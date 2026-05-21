@@ -6,6 +6,7 @@ import { KeyboardHelpDialog } from '@/components/shared/keyboard-help-dialog'
 import { AppShortcuts } from '@/components/shared/app-shortcuts'
 import { ChatAssistant } from '@/components/shared/chat-assistant'
 import { PwaInstallBanner } from '@/components/shared/pwa-install-banner'
+import { ReadonlyWrapper } from '@/components/shared/readonly-wrapper'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireAuth()
@@ -16,7 +17,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Sidebar userRole={user.role} />
       <div className="ml-64">
         <Header userName={user.nome} userRole={user.role} />
-        <main className="p-6 min-h-screen bg-background">{children}</main>
+        <main className="p-6 min-h-screen bg-background">
+          <ReadonlyWrapper isReadOnly={user.role === 'VISUALIZADOR'}>
+            {children}
+          </ReadonlyWrapper>
+        </main>
       </div>
       <CommandPalette />
       <KeyboardHelpDialog />
