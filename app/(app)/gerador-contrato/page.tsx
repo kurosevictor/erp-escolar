@@ -51,8 +51,9 @@ export default function GeradorContratoPage() {
     nomeAluno: '', cpfAluno: '', nascAluno: '',
     celularAluno: '', emailAluno: '',
     enderecoAluno: '', bairroAluno: '', municipioAluno: '',
+    nacionalidade: 'Brasileira',
     // Responsável legal (menores)
-    nomeResponsavelLegal: '', grauParentescoLegal: '', cpfResponsavelLegal: '',
+    nomeResponsavelLegal: '', grauParentescoLegal: 'MESMO', cpfResponsavelLegal: '',
     nascResponsavelLegal: '', enderecoResponsavel: '', bairroResponsavel: '',
     municipioResponsavel: '', celularResponsavel: '', emailResponsavel: '',
     // Mensalidades
@@ -80,6 +81,7 @@ export default function GeradorContratoPage() {
   }, [form.valorParcelaSemDesconto])
 
   // Quando maior de idade: repete dados do aluno nos campos de responsável
+  // Quando menor: limpa grau de parentesco para o usuário preencher
   useEffect(() => {
     if (!menor) {
       setForm(f => ({
@@ -94,6 +96,8 @@ export default function GeradorContratoPage() {
         bairroResponsavel: f.bairroAluno,
         municipioResponsavel: f.municipioAluno,
       }))
+    } else {
+      setForm(f => ({ ...f, grauParentescoLegal: f.grauParentescoLegal === 'MESMO' ? '' : f.grauParentescoLegal }))
     }
   }, [menor, form.nomeAluno, form.cpfAluno, form.nascAluno, form.celularAluno, form.emailAluno, form.enderecoAluno, form.bairroAluno, form.municipioAluno])
 
@@ -170,6 +174,9 @@ export default function GeradorContratoPage() {
         </Field>
         <Field label="Município">
           <input className={inputCls} value={form.municipioAluno} onChange={e => set('municipioAluno', e.target.value)} placeholder="Jaraguá do Sul" />
+        </Field>
+        <Field label="Nacionalidade">
+          <input className={inputCls} value={form.nacionalidade} onChange={e => set('nacionalidade', e.target.value)} placeholder="Brasileira" />
         </Field>
         {form.nascAluno && (
           <div className="md:col-span-2 flex items-center">
