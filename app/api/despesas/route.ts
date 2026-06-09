@@ -33,9 +33,16 @@ export async function GET() {
       await prisma.despesa.createMany({ data: DESPESAS_INICIAIS })
     }
 
+    const agora = new Date()
+    const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1)
+    const fimMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0, 23, 59, 59)
+
     const [despesas, parcelasPagas] = await Promise.all([
       prisma.despesa.findMany({ orderBy: [{ diaVencimento: 'asc' }, { createdAt: 'asc' }] }),
-      prisma.parcela.findMany({ where: { pago: true }, select: { valor: true } }),
+      prisma.parcela.findMany({
+        where: { pago: true, vencimento: { gte: inicioMes, lte: fimMes } },
+        select: { valor: true },
+      }),
     ])
 
     const totalMensalidadesPagas = parcelasPagas.reduce((sum: number, p: { valor: number }) => sum + p.valor, 0)
