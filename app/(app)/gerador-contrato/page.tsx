@@ -56,6 +56,9 @@ export default function GeradorContratoPage() {
     nomeResponsavelLegal: '', grauParentescoLegal: 'MESMO', cpfResponsavelLegal: '',
     nascResponsavelLegal: '', enderecoResponsavel: '', bairroResponsavel: '',
     municipioResponsavel: '', celularResponsavel: '', emailResponsavel: '',
+    // Responsável financeiro (só quando diferente do legal/aluno)
+    nomeResponsavelFinanceiro: '', enderecoResponsavelFinanceiro: '',
+    bairroResponsavelFinanceiro: '', municipioResponsavelFinanceiro: '',
     // Mensalidades
     dataPrimeiraMensalidade: '', valorPrimeiraMensalidade: '',
     dataSegundaMensalidade: '', valorSegundaMensalidade: '',
@@ -67,6 +70,7 @@ export default function GeradorContratoPage() {
   })
 
   const menor = calcIdade(form.nascAluno) < 18
+  const [financeiroDiferente, setFinanceiroDiferente] = useState(false)
 
   function set(k: string, v: string) {
     setForm(f => ({ ...f, [k]: v }))
@@ -219,6 +223,35 @@ export default function GeradorContratoPage() {
           </Field>
         </Section>
       )}
+
+      {/* RESPONSÁVEL FINANCEIRO (quando é pessoa diferente do responsável legal/aluno) */}
+      <Section icon={DollarSign} title="Responsável Financeiro">
+        <label className="md:col-span-2 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+          <input
+            type="checkbox"
+            checked={financeiroDiferente}
+            onChange={e => setFinanceiroDiferente(e.target.checked)}
+            className="rounded border-slate-300"
+          />
+          O responsável financeiro é uma pessoa diferente do responsável legal/aluno
+        </label>
+        {financeiroDiferente && (
+          <>
+            <Field label="Nome do responsável financeiro" required>
+              <input className={inputCls} value={form.nomeResponsavelFinanceiro} onChange={e => set('nomeResponsavelFinanceiro', e.target.value)} placeholder="Nome completo" />
+            </Field>
+            <Field label="Endereço residencial">
+              <input className={inputCls} value={form.enderecoResponsavelFinanceiro} onChange={e => set('enderecoResponsavelFinanceiro', e.target.value)} placeholder="Rua, número" />
+            </Field>
+            <Field label="Bairro">
+              <input className={inputCls} value={form.bairroResponsavelFinanceiro} onChange={e => set('bairroResponsavelFinanceiro', e.target.value)} />
+            </Field>
+            <Field label="Município">
+              <input className={inputCls} value={form.municipioResponsavelFinanceiro} onChange={e => set('municipioResponsavelFinanceiro', e.target.value)} placeholder="Jaraguá do Sul" />
+            </Field>
+          </>
+        )}
+      </Section>
 
       {/* MENSALIDADES */}
       <Section icon={DollarSign} title="Datas das Mensalidades">

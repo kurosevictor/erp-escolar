@@ -66,8 +66,13 @@ export async function POST(req: NextRequest) {
       municipioResponsavel: body.municipioResponsavel || body.municipioAluno || '',
       celularResponsavel: body.celularResponsavel || body.celularAluno || '',
       emailResponsavel: body.emailResponsavel || body.emailAluno || '',
-      nomeResponsavelFinanceiro: body.nomeResponsavelLegal || body.nomeAluno || '',
+      nomeResponsavelFinanceiro: body.nomeResponsavelFinanceiro || body.nomeResponsavelLegal || body.nomeAluno || '',
       cpfResponsavelAss: body.cpfResponsavelLegal || body.cpfAluno || '',
+
+      // Responsável financeiro — endereço próprio (cai pro endereço do responsável legal/aluno quando é a mesma pessoa)
+      enderecoResponsavelFinanceiro: body.enderecoResponsavelFinanceiro || body.enderecoResponsavel || body.enderecoAluno || '',
+      bairroResponsavelFinanceiro: body.bairroResponsavelFinanceiro || body.bairroResponsavel || body.bairroAluno || '',
+      municipioResponsavelFinanceiro: body.municipioResponsavelFinanceiro || body.municipioResponsavel || body.municipioAluno || '',
 
       // Mensalidades
       dataPrimeiraMensalidade: formatarData(body.dataPrimeiraMensalidade),
