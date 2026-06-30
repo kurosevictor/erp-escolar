@@ -57,7 +57,8 @@ export default function GeradorContratoPage() {
     nascResponsavelLegal: '', enderecoResponsavel: '', bairroResponsavel: '',
     municipioResponsavel: '', celularResponsavel: '', emailResponsavel: '',
     // Responsável financeiro (só quando diferente do legal/aluno)
-    nomeResponsavelFinanceiro: '', enderecoResponsavelFinanceiro: '',
+    nomeResponsavelFinanceiro: '', cpfResponsavelFinanceiro: '', nascResponsavelFinanceiro: '',
+    numeroResponsavelFinanceiro: '', enderecoResponsavelFinanceiro: '',
     bairroResponsavelFinanceiro: '', municipioResponsavelFinanceiro: '',
     // Mensalidades
     dataPrimeiraMensalidade: '', valorPrimeiraMensalidade: '',
@@ -240,8 +241,17 @@ export default function GeradorContratoPage() {
             <Field label="Nome do responsável financeiro" required>
               <input className={inputCls} value={form.nomeResponsavelFinanceiro} onChange={e => set('nomeResponsavelFinanceiro', e.target.value)} placeholder="Nome completo" />
             </Field>
+            <Field label="CPF do responsável financeiro">
+              <input className={inputCls} value={form.cpfResponsavelFinanceiro} onChange={e => set('cpfResponsavelFinanceiro', e.target.value)} placeholder="000.000.000-00" />
+            </Field>
+            <Field label="Data de nascimento">
+              <input className={inputCls} type="date" value={form.nascResponsavelFinanceiro} onChange={e => set('nascResponsavelFinanceiro', e.target.value)} />
+            </Field>
             <Field label="Endereço residencial">
               <input className={inputCls} value={form.enderecoResponsavelFinanceiro} onChange={e => set('enderecoResponsavelFinanceiro', e.target.value)} placeholder="Rua, número" />
+            </Field>
+            <Field label="Número">
+              <input className={inputCls} value={form.numeroResponsavelFinanceiro} onChange={e => set('numeroResponsavelFinanceiro', e.target.value)} placeholder="123" />
             </Field>
             <Field label="Bairro">
               <input className={inputCls} value={form.bairroResponsavelFinanceiro} onChange={e => set('bairroResponsavelFinanceiro', e.target.value)} />
