@@ -37,20 +37,22 @@ export async function GET() {
     const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1)
     const fimMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0, 23, 59, 59)
 
-    const [despesas, parcelasPagas] = await Promise.all([
+    const [despesas, parcelasPagas, cfgCaixaTotal] = await Promise.all([
       prisma.despesa.findMany({ orderBy: [{ diaVencimento: 'asc' }, { createdAt: 'asc' }] }),
       prisma.parcela.findMany({
         where: { pago: true, vencimento: { gte: inicioMes, lte: fimMes } },
         select: { valor: true },
       }),
+      prisma.configuracao.findUnique({ where: { chave: 'caixaTotal' } }),
     ])
 
     const totalMensalidadesPagas = parcelasPagas.reduce((sum: number, p: { valor: number }) => sum + p.valor, 0)
+    const caixaTotal = typeof cfgCaixaTotal?.valor === 'number' ? cfgCaixaTotal.valor : 0
 
-    return NextResponse.json({ despesas, totalMensalidadesPagas })
+    return NextResponse.json({ despesas, totalMensalidadesPagas, caixaTotal })
   } catch (e) {
     console.error('[despesas GET]', e)
-    return NextResponse.json({ despesas: [], totalMensalidadesPagas: 0 }, { status: 500 })
+    return NextResponse.json({ despesas: [], totalMensalidadesPagas: 0, caixaTotal: 0 }, { status: 500 })
   }
 }
 
@@ -65,4 +67,18 @@ export async function POST(request: NextRequest) {
     },
   })
   return NextResponse.json(despesa, { status: 201 })
+}
+
+export async function PATCH(request: NextRequest) {
+  await requireAuth()
+  const body = await request.json()
+  if (typeof body.caixaTotal === 'number') {
+    const cfg = await prisma.configuracao.upsert({
+      where: { chave: 'caixaTotal' },
+      update: { valor: body.caixaTotal },
+      create: { chave: 'caixaTotal', valor: body.caixaTotal },
+    })
+    return NextResponse.json({ caixaTotal: cfg.valor })
+  }
+  return NextResponse.json({ error: 'invalid body' }, { status: 400 })
 }

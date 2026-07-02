@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { formatCurrency } from '@/lib/utils'
-import { TrendingDown, Wallet, RefreshCw, Plus, Trash2 } from 'lucide-react'
+import { TrendingDown, Wallet, RefreshCw, Plus, Trash2, PencilLine, Check } from 'lucide-react'
 
 interface Despesa {
   id: string
@@ -14,6 +14,9 @@ interface Despesa {
 export default function DespesasPage() {
   const [despesas, setDespesas] = useState<Despesa[]>([])
   const [totalMensalidadesPagas, setTotalMensalidadesPagas] = useState(0)
+  const [caixaTotal, setCaixaTotal] = useState(0)
+  const [editandoCaixaTotal, setEditandoCaixaTotal] = useState(false)
+  const [caixaTotalInput, setCaixaTotalInput] = useState('')
   const [loading, setLoading] = useState(true)
   const [novaForm, setNovaForm] = useState(false)
   const [novaDespesa, setNovaDespesa] = useState({ nome: '', valor: '', diaVencimento: '' })
@@ -27,6 +30,7 @@ export default function DespesasPage() {
       const data = await res.json()
       setDespesas(data.despesas ?? [])
       setTotalMensalidadesPagas(data.totalMensalidadesPagas ?? 0)
+      setCaixaTotal(data.caixaTotal ?? 0)
     } catch {
       // silently fail, leave empty state
     } finally {
@@ -56,6 +60,18 @@ export default function DespesasPage() {
         body: JSON.stringify({ valor: isNaN(num) ? 0 : num }),
       })
     }, 700)
+  }
+
+  async function saveCaixaTotal() {
+    const num = parseFloat(caixaTotalInput.replace(',', '.'))
+    if (isNaN(num)) { setEditandoCaixaTotal(false); return }
+    setCaixaTotal(num)
+    setEditandoCaixaTotal(false)
+    await fetch('/api/despesas', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ caixaTotal: num }),
+    })
   }
 
   async function novoMes() {
@@ -135,7 +151,7 @@ export default function DespesasPage() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4">
           <div className="bg-green-100 p-3 rounded-lg">
             <Wallet className="w-6 h-6 text-green-600" />
@@ -160,9 +176,42 @@ export default function DespesasPage() {
             <Wallet className="w-6 h-6 text-white" />
           </div>
           <div>
-            <p className="text-sm text-white/80">Caixa</p>
+            <p className="text-sm text-white/80">Caixa do Mês</p>
             <p className="text-xl font-bold text-white">{formatCurrency(caixa)}</p>
-            <p className="text-xs text-white/70">Mensalidades pagas − despesas pagas</p>
+            <p className="text-xs text-white/70">Mensalidades − despesas</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4">
+          <div className="bg-indigo-100 p-3 rounded-lg">
+            <Wallet className="w-6 h-6 text-indigo-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-gray-500">Caixa Total</p>
+            {editandoCaixaTotal ? (
+              <div className="flex items-center gap-1 mt-0.5">
+                <input
+                  autoFocus
+                  value={caixaTotalInput}
+                  onChange={e => setCaixaTotalInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveCaixaTotal(); if (e.key === 'Escape') setEditandoCaixaTotal(false) }}
+                  className="w-32 border border-indigo-300 rounded px-2 py-0.5 text-base font-bold text-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                />
+                <button onClick={saveCaixaTotal} className="text-indigo-600 hover:text-indigo-800">
+                  <Check className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 mt-0.5">
+                <p className="text-xl font-bold text-indigo-700">{formatCurrency(caixaTotal)}</p>
+                <button
+                  onClick={() => { setCaixaTotalInput(caixaTotal.toFixed(2).replace('.', ',')); setEditandoCaixaTotal(true) }}
+                  className="text-gray-400 hover:text-indigo-600 ml-1"
+                >
+                  <PencilLine className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+            <p className="text-xs text-gray-400">Editável manualmente</p>
           </div>
         </div>
       </div>
@@ -280,7 +329,7 @@ export default function DespesasPage() {
       {/* Caixa total fixo no fim */}
       <div className={`rounded-xl p-6 flex items-center justify-between ${caixa >= 0 ? 'bg-blue-600' : 'bg-red-600'}`}>
         <div>
-          <p className="text-white/80 text-sm font-medium">Caixa do mês</p>
+          <p className="text-white/80 text-sm font-medium">Caixa do Mês</p>
           <p className="text-white text-xs mt-0.5">Entradas (mensalidades pagas) − Saídas (despesas pagas)</p>
         </div>
         <div className="text-right">
