@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { FileText, Upload, Trash2, Eye, Download, Loader2 } from 'lucide-react'
+import { FileText, Upload, Trash2, Eye, Download, Loader2, Search } from 'lucide-react'
 
 interface Arquivo {
   name: string
@@ -31,7 +31,12 @@ export default function ContratosPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewNome, setPreviewNome] = useState('')
   const [removendo, setRemovendo] = useState<string | null>(null)
+  const [busca, setBusca] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const arquivosFiltrados = busca.trim()
+    ? arquivos.filter(a => nomeLegivel(a.name).toLowerCase().includes(busca.toLowerCase()))
+    : arquivos
 
   async function load() {
     setLoading(true)
@@ -109,6 +114,18 @@ export default function ContratosPage() {
         </div>
       </div>
 
+      {/* Busca */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Pesquisar contrato..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="w-full pl-9 pr-4 py-2 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
       {/* Drop zone */}
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
@@ -145,25 +162,27 @@ export default function ContratosPage() {
       <div className="rounded-xl border bg-card overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-muted-foreground text-sm">Carregando...</div>
-        ) : arquivos.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground text-sm">Nenhum contrato enviado ainda.</div>
+        ) : arquivosFiltrados.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground text-sm">
+            {busca ? 'Nenhum contrato encontrado.' : 'Nenhum contrato enviado ainda.'}
+          </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/40 text-left">
-                <th className="px-4 py-3 font-medium">Nome</th>
-                <th className="px-4 py-3 font-medium hidden sm:table-cell">Enviado em</th>
-                <th className="px-4 py-3 font-medium hidden sm:table-cell">Tamanho</th>
-                <th className="px-4 py-3 font-medium text-right">Ações</th>
+                <th className="px-4 py-3 font-medium text-foreground">Nome</th>
+                <th className="px-4 py-3 font-medium text-foreground hidden sm:table-cell">Enviado em</th>
+                <th className="px-4 py-3 font-medium text-foreground hidden sm:table-cell">Tamanho</th>
+                <th className="px-4 py-3 font-medium text-foreground text-right">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {arquivos.map((a) => (
+              {arquivosFiltrados.map((a) => (
                 <tr key={a.name} className={`border-b last:border-0 hover:bg-muted/30 transition-colors ${previewNome === a.name ? 'bg-blue-50 dark:bg-blue-950/30' : ''}`}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-red-500 shrink-0" />
-                      <span className="font-medium truncate max-w-xs">{nomeLegivel(a.name)}</span>
+                      <span className="font-medium truncate max-w-xs text-foreground">{nomeLegivel(a.name)}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{formatData(a.created_at)}</td>
