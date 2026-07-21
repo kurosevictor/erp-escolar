@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { formatCurrency } from '@/lib/utils'
-import { TrendingDown, Wallet, RefreshCw, Plus, Trash2, PencilLine, Check } from 'lucide-react'
+import { TrendingDown, Wallet, RefreshCw, Plus, Trash2, PencilLine, Check, History } from 'lucide-react'
 
 interface Despesa {
   id: string
@@ -10,6 +10,17 @@ interface Despesa {
   diaVencimento: number
   pago: boolean
 }
+
+interface Historico {
+  id: string
+  nome: string
+  valor: number
+  mes: number
+  ano: number
+  dataPagamento: string
+}
+
+const MESES = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
 export default function DespesasPage() {
   const [despesas, setDespesas] = useState<Despesa[]>([])
@@ -20,6 +31,10 @@ export default function DespesasPage() {
   const [loading, setLoading] = useState(true)
   const [novaForm, setNovaForm] = useState(false)
   const [novaDespesa, setNovaDespesa] = useState({ nome: '', valor: '', diaVencimento: '' })
+  const [showHistorico, setShowHistorico] = useState(false)
+  const [historico, setHistorico] = useState<Historico[]>([])
+  const [loadingHistorico, setLoadingHistorico] = useState(false)
+  const [filtroNome, setFiltroNome] = useState('')
   const valorRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
   async function load() {
@@ -92,6 +107,22 @@ export default function DespesasPage() {
     await fetch(`/api/despesas/${id}`, { method: 'DELETE' })
   }
 
+  async function loadHistorico() {
+    setLoadingHistorico(true)
+    try {
+      const res = await fetch('/api/despesas/historico')
+      const data = await res.json()
+      setHistorico(data.historico ?? [])
+    } finally {
+      setLoadingHistorico(false)
+    }
+  }
+
+  function toggleHistorico() {
+    if (!showHistorico && historico.length === 0) loadHistorico()
+    setShowHistorico(v => !v)
+  }
+
   async function criarDespesa() {
     const valor = parseFloat(novaDespesa.valor.replace(',', '.')) || 0
     const diaVencimento = parseInt(novaDespesa.diaVencimento)
@@ -139,6 +170,13 @@ export default function DespesasPage() {
           >
             <Plus className="w-4 h-4" />
             Adicionar
+          </button>
+          <button
+            onClick={toggleHistorico}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showHistorico ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+          >
+            <History className="w-4 h-4" />
+            Histórico
           </button>
           <button
             onClick={novoMes}
@@ -325,6 +363,69 @@ export default function DespesasPage() {
             )
           })}
       </div>
+
+      {/* Histórico de despesas pagas */}
+      {showHistorico && (
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <History className="w-4 h-4 text-indigo-600" />
+              <h2 className="font-semibold text-gray-800">Histórico de Pagamentos</h2>
+            </div>
+            <input
+              type="text"
+              placeholder="Filtrar por despesa..."
+              value={filtroNome}
+              onChange={e => setFiltroNome(e.target.value)}
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 w-52"
+            />
+          </div>
+          {loadingHistorico ? (
+            <div className="p-8 text-center text-gray-400 text-sm">Carregando...</div>
+          ) : historico.length === 0 ? (
+            <div className="p-8 text-center text-gray-400 text-sm">Nenhum histórico registrado ainda.</div>
+          ) : (() => {
+            const filtrado = filtroNome
+              ? historico.filter(h => h.nome.toLowerCase().includes(filtroNome.toLowerCase()))
+              : historico
+
+            const grupos: Record<string, Historico[]> = {}
+            filtrado.forEach(h => {
+              const key = `${h.ano}-${String(h.mes).padStart(2, '0')}`
+              if (!grupos[key]) grupos[key] = []
+              grupos[key].push(h)
+            })
+
+            return (
+              <div className="divide-y divide-gray-50">
+                {Object.entries(grupos)
+                  .sort(([a], [b]) => b.localeCompare(a))
+                  .map(([key, items]) => {
+                    const [ano, mes] = key.split('-')
+                    const total = items.reduce((s, h) => s + h.valor, 0)
+                    return (
+                      <div key={key}>
+                        <div className="px-5 py-2 bg-gray-50 flex items-center justify-between">
+                          <span className="text-sm font-semibold text-gray-700">{MESES[parseInt(mes)]}/{ano}</span>
+                          <span className="text-sm font-bold text-gray-800">{formatCurrency(total)}</span>
+                        </div>
+                        {items.map(h => (
+                          <div key={h.id} className="flex items-center px-5 py-2.5 gap-4 hover:bg-gray-50">
+                            <span className="flex-1 text-sm text-gray-700">{h.nome}</span>
+                            <span className="text-sm font-semibold text-gray-800">{formatCurrency(h.valor)}</span>
+                            <span className="text-xs text-gray-400 w-24 text-right">
+                              {new Date(h.dataPagamento).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  })}
+              </div>
+            )
+          })()}
+        </div>
+      )}
 
       {/* Caixa total fixo no fim */}
       <div className={`rounded-xl p-6 flex items-center justify-between ${caixa >= 0 ? 'bg-blue-600' : 'bg-red-600'}`}>

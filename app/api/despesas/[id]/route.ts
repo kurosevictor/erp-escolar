@@ -15,6 +15,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   const despesa = await prisma.despesa.update({ where: { id }, data })
+
+  // Grava histórico ao marcar como pago
+  if (body.pago === true) {
+    const agora = new Date()
+    await prisma.despesaHistorico.create({
+      data: {
+        despesaId: id,
+        nome: despesa.nome,
+        valor: despesa.valor,
+        mes: agora.getMonth() + 1,
+        ano: agora.getFullYear(),
+        dataPagamento: agora,
+      },
+    })
+  }
+
   return NextResponse.json(despesa)
 }
 

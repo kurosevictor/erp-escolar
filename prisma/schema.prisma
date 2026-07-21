@@ -233,17 +233,34 @@ model ConfiguracaoSheet {
 }
 
 model Despesa {
-  id            String    @id @default(cuid())
+  id            String              @id @default(cuid())
   nome          String
   valor         Float
   diaVencimento Int
-  pago          Boolean   @default(false)
+  pago          Boolean             @default(false)
   dataPagamento DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  historico     DespesaHistorico[]
 
   @@index([diaVencimento])
   @@index([pago])
+}
+
+model DespesaHistorico {
+  id            String   @id @default(cuid())
+  despesaId     String
+  nome          String
+  valor         Float
+  mes           Int
+  ano           Int
+  dataPagamento DateTime
+  createdAt     DateTime @default(now())
+
+  despesa Despesa @relation(fields: [despesaId], references: [id], onDelete: Cascade)
+
+  @@index([despesaId])
+  @@index([mes, ano])
 }
 
 model Tarefa {
