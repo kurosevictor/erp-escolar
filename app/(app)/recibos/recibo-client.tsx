@@ -15,7 +15,7 @@ interface Props {
   meuNome: string
 }
 
-const REFERENTES = ['Mensalidade', 'Rescisão', 'Inscrição', 'Material']
+const REFERENTES = ['Mensalidade', 'Rescisão', 'Inscrição', 'Material', 'Personalizado']
 
 const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro']
 
@@ -38,6 +38,7 @@ export function ReciboClient({ alunos, usuariosComSig, minhaSig, meuNome }: Prop
   const [extenso, setExtenso] = useState('')
   const [extensoManual, setExtensoManual] = useState(false)
   const [referente, setReferente] = useState(REFERENTES[0])
+  const [referenteCustom, setReferenteCustom] = useState('')
   const [dataHora] = useState(agora)
   const [sigSelecionada, setSigSelecionada] = useState<UsuarioSig | null>(null)
 
@@ -102,6 +103,7 @@ export function ReciboClient({ alunos, usuariosComSig, minhaSig, meuNome }: Prop
     if (!alunoNome) { toast.error('Selecione um aluno'); return }
     if (!valorNum)  { toast.error('Informe o valor'); return }
     if (!extenso)   { toast.error('Informe o valor por extenso'); return }
+    if (referente === 'Personalizado' && !referenteCustom.trim()) { toast.error('Informe o texto do referente'); return }
 
     setGerando(true)
     setPdfBase64(null)
@@ -115,7 +117,7 @@ export function ReciboClient({ alunos, usuariosComSig, minhaSig, meuNome }: Prop
         alunoNome,
         valorNumerico: valorFormatado,
         valorExtenso: extenso,
-        referente,
+        referente: referente === 'Personalizado' ? referenteCustom : referente,
         dataFormatada: formatarData(dataHora),
         horaFormatada: formatarHora(dataHora),
         assinaturaBase64: sig?.assinaturaUrl ?? undefined,
@@ -197,6 +199,15 @@ export function ReciboClient({ alunos, usuariosComSig, minhaSig, meuNome }: Prop
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
               {REFERENTES.map(r => <option key={r}>{r}</option>)}
             </select>
+            {referente === 'Personalizado' && (
+              <input
+                autoFocus
+                value={referenteCustom}
+                onChange={e => setReferenteCustom(e.target.value)}
+                placeholder="Digite a descrição..."
+                className="w-full border border-blue-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
+              />
+            )}
           </div>
         </div>
 
